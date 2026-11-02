@@ -7,14 +7,12 @@ const tglIni=()=>new Date().toLocaleDateString('sv-SE');
 const fTgl=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||'');return m?m[3]+'/'+m[2]+'/'+m[1]:(s||'')};
 const BLN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 const sch=()=>(S.cfg&&S.cfg.schoolName)||'Sekolah';
-const kop=()=>{const c=S.cfg||{},lg=thumb(c.logoUrl),l2=[c.alamat,c.telepon?'Telp. '+c.telepon:'',c.email].filter(Boolean).join(' | '),id=[c.npsn?'NPSN: '+c.npsn:'',c.nss?'NSS: '+c.nss:''].filter(Boolean).join('   ');
-  return `<table style="width:100%;border-collapse:collapse;border-bottom:3px double #000;margin-bottom:12px"><tr><td style="width:80px;text-align:center;padding:4px">${lg?'<img alt="" src="'+lg+'" style="height:64px">':''}</td><td style="text-align:center;padding:4px"><div style="font-size:15pt;font-weight:bold">${esc(sch().toUpperCase())}</div><div style="font-size:9pt">${esc(l2)}</div><div style="font-size:9pt">${esc(id)}</div></td><td style="width:80px"></td></tr></table>`};
+const kop=()=>`<div style="text-align:center;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px"><b style="font-size:16px">${esc(sch().toUpperCase())}</b><br><small>${esc((S.cfg&&S.cfg.alamat)||'')}</small></div>`;
 function dlBlob(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove()}
 function dlDoc(name,html){dlBlob(name,new Blob(['\ufeff<html><meta charset="utf-8"><body style="font-family:Arial,sans-serif">'+html+'</body></html>'],{type:'application/msword'}))}
 function cetak(html){$('printArea').innerHTML=html;setTimeout(()=>window.print(),300)}
 function pp(r,k){const n=(+r.Hadir||0)+(+r.Izin||0)+(+r.Sakit||0)+(+r.Alpa||0);return n?Math.round(r[k]*1000/n)/10:0}
 function xlsSave(name,sheets){if(!window.XLSX){toast('Belum siap','Pustaka Excel belum termuat, coba lagi sebentar.','warning');return}const wb=XLSX.utils.book_new();sheets.forEach(s=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s[1]),s[0].slice(0,30)));XLSX.writeFile(wb,name)}
-const nkF=x=>String(x==null?'':x).toLowerCase().replace(/[\s\-\u2010-\u2015_.]+/g,'');
 const isOT=()=>S.user&&(S.user.Role==='Orang Tua'||S.user.Role==='Murid');
 
 // ── Ikon ──
@@ -25,13 +23,13 @@ Object.assign(IC,{visimisi:'bi-bullseye',struktur:'bi-diagram-3',kelas:'bi-door-
  rekammedis:'bi-heart-pulse',kunjunganuks:'bi-hospital',stokobat:'bi-capsule',kopstok:'bi-boxes',kopjual:'bi-cart-check',emoney:'bi-credit-card-2-front',kop_laporan:'bi-file-earmark-bar-graph',piketguru:'bi-person-workspace',piketsiswa:'bi-brush',
  rapat:'bi-easel',notulen:'bi-journal-richtext',presensirapat:'bi-people',followup:'bi-arrow-return-right',osis:'bi-flag',orgkelas:'bi-diagram-2',pengumuman:'bi-megaphone',backup:'bi-cloud-arrow-up',users:'bi-shield-lock',pengaturan:'bi-gear',
  g_matcep:'bi-calculator',g_sains:'bi-radioactive',g_sejarah:'bi-bank2',g_rantai:'bi-link-45deg',g_tebak:'bi-fonts',g_ular:'bi-dice-5',g_balok:'bi-grid-3x3-gap',g_cari:'bi-search',g_quran:'bi-book',
- infaqmasuk:'bi-heart',infaqkeluar:'bi-box-arrow-up',infaqlap:'bi-pie-chart',bosdana:'bi-bank2',bospengambilan:'bi-cash-stack',bospengeluaran:'bi-receipt-cutoff',boslap:'bi-clipboard-data',kondisibarang:'bi-clipboard2-pulse',baranghibah:'bi-gift',t_spin:'bi-arrow-repeat',t_acak:'bi-shuffle',t_pasang:'bi-people-fill',t_3d:'bi-box',t_konversi:'bi-arrow-left-right',t_papan:'bi-easel2',t_mind:'bi-share',t_peta:'bi-geo-alt',t_lab:'bi-eyedropper'});
+ t_spin:'bi-arrow-repeat',t_acak:'bi-shuffle',t_pasang:'bi-people-fill',t_3d:'bi-box',t_konversi:'bi-arrow-left-right',t_papan:'bi-easel2',t_mind:'bi-share',t_peta:'bi-geo-alt',t_lab:'bi-eyedropper'});
 const GI={'Beranda':'bi-house','Profil Sekolah':'bi-building','Data Master':'bi-database','Akademik':'bi-mortarboard','Eskul & Kokurikuler':'bi-trophy','Guru Pintar':'bi-lightbulb','Kesiswaan':'bi-people','Sarana & Prasarana':'bi-box-seam','Perpustakaan':'bi-book','Keuangan':'bi-cash-coin','Unit Kesehatan Sekolah':'bi-heart-pulse','Koperasi Sekolah':'bi-shop','Jadwal Piket':'bi-calendar2-week','Manajemen Rapat':'bi-easel','Organisasi Kelas':'bi-diagram-3','Game Edukatif':'bi-controller','Alat Pembelajaran':'bi-tools','Administrasi & Sistem':'bi-gear'};
 
 // ── Navigasi bergrup ──
 function buildNav(){
   const gs=[];S.menu.forEach(m=>{let g=gs.find(x=>x.n===m.g);if(!g){g={n:m.g,items:[]};gs.push(g)}g.items.push(m)});
-  const link=m=>`<li class="nitem"><a href="javascript:void(0)" class="nl" data-id="${m.id}" onclick="navigateTo('${m.id}')" onpointerenter="warm('${m.id}')" ontouchstart="warm('${m.id}')"><i class="bi ${IC[m.id]||'bi-circle'}"></i><span>${esc(m.label)}</span></a></li>`;
+  const link=m=>`<li class="nitem"><a href="javascript:void(0)" class="nl" data-id="${m.id}" onclick="navigateTo('${m.id}')"><i class="bi ${IC[m.id]||'bi-circle'}"></i><span>${esc(m.label)}</span></a></li>`;
   let op={};try{op=JSON.parse(sessionStorage.getItem('navopen')||'{}')}catch(e){}
   $('nav').innerHTML='<li class="px-1 pb-2"><input id="navQ" class="form-control form-control-sm" placeholder="Cari menu…" aria-label="Cari menu" oninput="filterNav(this.value)"></li>'+
    gs.map(g=>g.n==='Beranda'?g.items.map(link).join(''):`<li class="ngrp ${op[g.n]?'open':''}" data-g="${esc(g.n)}"><button class="ngh" type="button" onclick="toggleGrp(this.parentNode)"><i class="bi ${GI[g.n]||'bi-folder'}"></i><span>${esc(g.n)}</span><i class="bi bi-chevron-down chev"></i></button><ul class="ngl">${g.items.map(link).join('')}</ul></li>`).join('');
@@ -44,7 +42,7 @@ function filterNav(q){
   document.querySelectorAll('#nav .nitem').forEach(li=>{li.style.display=!q||li.textContent.toLowerCase().includes(q)?'':'none'});
   document.querySelectorAll('.ngrp').forEach(g=>{if(q){const any=[...g.querySelectorAll('.nitem')].some(li=>li.style.display!=='none');g.style.display=any?'':'none';g.classList.toggle('open',any)}else{g.style.display='';g.classList.toggle('open',!!op[g.dataset.g])}});
 }
-const PAGE={infaqlap:'renderInfaqLap',boslap:'renderBosLap',dashboard:'renderDash',absensi:'renderAbs',scan:'renderScan',kartu:'renderKartu',kartupelajar:'renderKartu',pengaturan:'renderSet',arsip:'renderArsip',laporan:'renderLap',wajah:'renderWajah',daftarwajah:'renderDaftarWajah',
+const PAGE={dashboard:'renderDash',absensi:'renderAbs',scan:'renderScan',kartu:'renderKartu',kartupelajar:'renderKartu',pengaturan:'renderSet',arsip:'renderArsip',laporan:'renderLap',wajah:'renderWajah',daftarwajah:'renderDaftarWajah',
  visimisi:'renderVisi',rpp:'renderRpp',kuis:'renderKuis',kartuguru:'renderKartuGuru',perpusdash:'renderPerpus',neraca:'renderNeraca',kop_laporan:'renderKopLap',backup:'renderBackup'};
 function navigateTo(id){
   stopScan();if(S.cleanup){try{S.cleanup()}catch(e){}S.cleanup=null}
@@ -58,7 +56,7 @@ function navigateTo(id){
     if(typeof window[fn]!=='function')throw new Error('Halaman "'+id+'" belum tersedia.');
     const r=window[fn](arg);if(r&&r.catch)r.catch(fail);
   }catch(e){fail(e)}
-  if(!S.quiet)window.scrollTo(0,0);
+  window.scrollTo(0,0);
 }
 
 // ── Komponen persentase kehadiran ──
@@ -78,12 +76,11 @@ async function renderDash(){
   if(d.own){
     const t=d.total||1,pst={p:{},c:d.c,n:d.total};Object.keys(ST).forEach(s=>pst.p[s]=Math.round((d.c[s]||0)*1000/t)/10);
     $('app-container').innerHTML=`<div class="row g-3 mb-3">${pstCards(pst,'hari')}</div>${peng}${agenda}
-    <div class="card-x p-3"><h2 class="h6 mb-3">Riwayat kehadiran terakhir</h2><div class="table-responsive"><table class="table"><thead><tr><th>Tanggal</th><th>Status</th><th>Jam</th><th>Metode</th></tr></thead><tbody>${d.recent.map(r=>`<tr><td>${esc(r.Tanggal)}</td><td><span class="pill" style="background:${(ST[r.Status]||ST.Hadir)[0]};color:${(ST[r.Status]||ST.Hadir)[1]}">${esc(r.Status)}</span></td><td>${esc(r.Jam)}</td><td>${esc(r.Metode)}</td></tr>`).join('')||'<tr><td colspan="4" class="text-center text-secondary">Belum ada data.</td></tr>'}</tbody></table></div></div>`;
+    <div class="card-x p-3"><h2 class="h6 mb-3">Riwayat kehadiran terakhir</h2><div class="table-responsive"><table class="table"><thead><tr><th>Anak</th><th>Tanggal</th><th>Status</th><th>Jam</th><th>Metode</th></tr></thead><tbody>${d.recent.map(r=>`<tr><td>${esc(r.Nama||"")}</td><td>${esc(r.Tanggal)}</td><td><span class="pill" style="background:${(ST[r.Status]||ST.Hadir)[0]};color:${(ST[r.Status]||ST.Hadir)[1]}">${esc(r.Status)}</span></td><td>${esc(r.Jam)}</td><td>${esc(r.Metode)}</td></tr>`).join('')||'<tr><td colspan="5" class="text-center text-secondary">Belum ada data.</td></tr>'}</tbody></table></div></div>`;
     return;
   }
   const p=d.siswa?Math.round(d.hadir*1000/d.siswa)/10:0;
-  const demoB=S.user.Role==='Demo'?'<div class="alert alert-info py-2 small"><i class="bi bi-eye"></i> <b>Akun demo</b>: semua fitur dapat dilihat, tetapi tidak dapat menambah, mengubah, atau menghapus data. Data pribadi siswa dan guru disamarkan.</div>':'';
-  $('app-container').innerHTML=`${demoB}<div class="row g-3 mb-3">${k('Total Siswa',d.siswa,'siswa aktif','#7C3AED','bi-people')}${k('Hadir Hari Ini',p+'%',d.hadir+' dari '+d.siswa+' siswa','#10B981','bi-check-circle')}${k('Jurnal Hari Ini',d.jurnal,'terisi','#F59E0B','bi-journal-text')}${k('Total GTK',d.guru,'guru & tenaga','#06B6D4','bi-person-badge')}</div>
+  $('app-container').innerHTML=`<div class="row g-3 mb-3">${k('Total Siswa',d.siswa,'siswa aktif','#7C3AED','bi-people')}${k('Hadir Hari Ini',p+'%',d.hadir+' dari '+d.siswa+' siswa','#10B981','bi-check-circle')}${k('Jurnal Hari Ini',d.jurnal,'terisi','#F59E0B','bi-journal-text')}${k('Total GTK',d.guru,'guru & tenaga','#06B6D4','bi-person-badge')}</div>
     <h2 class="h6 text-secondary">Kehadiran hari ini</h2><div class="row g-3 mb-3">${pstCards({p:d.pstHari,c:d.c,n:d.siswa},'siswa',true)}</div>
     <h2 class="h6 text-secondary">Akumulasi tahun ajaran ${esc(S.ta||'')}</h2><div class="row g-3 mb-3">${pstCards(d.pstTA,'catatan',true)}</div>
     <div class="row g-3 mb-3"><div class="col-lg-8"><div class="card-x p-3"><h2 class="h6">Persentase kehadiran per kelas</h2><canvas id="ch" height="130" aria-label="Grafik kehadiran per kelas" role="img"></canvas></div></div>
@@ -101,13 +98,13 @@ function drawAbs(){
    <div class="small text-secondary mt-3 mb-1">Persentase pada tanggal ini (dari ${d.siswa.length} siswa)</div><div class="row g-2">${pstCards(live,'siswa',true)}</div>
    <div class="small text-secondary mt-3 mb-1">Akumulasi tahun ajaran ${esc(d.ta||'')} — kelas ${esc(d.kelas)}</div><div class="row g-2">${pstCards(d.pstTA,'catatan',true)}</div>`;
   $('absList').innerHTML=d.siswa.length?d.siswa.map((s,i)=>`<div class="card-x p-3 mb-2 d-flex flex-wrap align-items-center gap-2"><div class="avatar">${esc(s.Nama.split(' ').map(w=>w[0]).slice(0,2).join(''))}</div><div class="me-auto"><div class="fw-bold">${i+1}. ${esc(s.Nama)}</div><div class="small text-secondary">NISN ${esc(s.NISN)}${s.Metode?' · '+esc(s.Metode)+' '+esc(s.Jam):''}</div></div>
-    ${d.canEdit?'<div class="chips">'+Object.keys(ST).map(k=>`<button class="chip ${S.abs[s.NISN]===k?'on':''}" style="--bg:${ST[k][0]};--fg:${ST[k][1]};--on:${ST[k][2]}" onclick="setSt(${i},'${k}')">${k}</button>`).join('')+'</div>':`<span class="pill bg-body-secondary">${esc(S.abs[s.NISN]||'-')}</span>`}</div>`).join(''):`<div class="card-x p-4"><div class="fw-bold mb-1">Belum ada siswa aktif di kelas ${esc(d.kelas||'-')}.</div><div class="small text-secondary">Pastikan siswa sudah ada di menu <b>Data Siswa</b> dengan kelas yang sama dan berstatus <b>Aktif</b>.${S.user.Role==='Guru Kelas'?' Kelas pada akun Anda: <b>'+esc(S.user.Kelas||'(kosong)')+'</b> (Admin dapat mengubahnya di menu Pengguna).':''}${(d.kelasAda||[]).length?'<br>Kelas yang tersedia di Data Siswa: '+d.kelasAda.map(k=>esc(k[0])+' ('+k[1]+' siswa)').join(', ')+'.':'<br>Data Siswa masih kosong.'}</div></div>`;
+    ${d.canEdit?'<div class="chips">'+Object.keys(ST).map(k=>`<button class="chip ${S.abs[s.NISN]===k?'on':''}" style="--bg:${ST[k][0]};--fg:${ST[k][1]};--on:${ST[k][2]}" onclick="setSt(${i},'${k}')">${k}</button>`).join('')+'</div>':`<span class="pill bg-body-secondary">${esc(S.abs[s.NISN]||'-')}</span>`}</div>`).join(''):'<div class="card-x p-4 text-center text-secondary">Belum ada siswa di kelas ini.</div>';
 }
 
 // ── CRUD generik ──
 const IMPORTABLE_FE=['siswa','guru','jurnal','kelas','mapel','jadwal','nilai','kaldik','eskul','hadireskul','hadirkoku','presensirapat','banksoal','tatib','struktur','inventaris','buku','anggota','piketguru','piketsiswa','kopstok','stokobat','pendapatan','pengeluaran','prestasi','pip','pembayaran','honorarium'];
 const CRX={},ROWX={},TBX={};
-const MONEYF={HargaSatuan:1,Total:1,Laba:1,Diterima:1,TotalNilai:1};
+const MONEYF={HargaSatuan:1,Total:1,Laba:1,Diterima:1};
 const PILL={g:['#ECFDF5','#065F46'],y:['#FEF3C7','#92400E'],r:['#FEE2E2','#991B1B'],b:['#E0E7FF','#3730A3']};
 const PILLMAP={Hadir:'g',Selesai:'g',Disetujui:'g',Dibayar:'g',Dicairkan:'g',Diterima:'g',Baik:'g',Aktif:'g',Lancar:'g',Layak:'g',Dikembalikan:'g','Daftar Ulang':'g',Izin:'y',Proses:'y',Diajukan:'y',Baru:'y',Cadangan:'y',Dipinjam:'y','Rusak Ringan':'y','Belum Dibayar':'y',Belum:'y',Usulan:'y','Perlu Perbaikan':'y',Dibina:'y','Orang tua dipanggil':'y',Sakit:'b',Rujukan:'b',Mutasi:'b',Lulus:'b',Alpa:'r',Ditolak:'r','Rusak Berat':'r','Tidak Layak':'r','Belum Hafal':'r','Tanpa Keterangan':'r',Keluar:'r',Nonaktif:'r'};
 const edF=f=>f.t!=='password'&&f.t!=='file'&&f.t!=='auto';
@@ -124,13 +121,13 @@ function cellHtml(c,f,r,ri){
 function canRow(c,r){
   if(!c.canWrite)return false;const R=S.user.Role;
   if(c.mod==='perizinan'&&R==='Orang Tua')return r.Status==='Diajukan';
-  if(['piketsiswa','orgkelas','jadwal'].indexOf(c.mod)>=0&&R==='Guru Kelas')return nkF(r.Kelas)===nkF(S.user.Kelas);
+  if((c.mod==='piketsiswa'||c.mod==='orgkelas')&&R==='Guru Kelas')return r.Kelas===S.user.Kelas;
   return true;
 }
 async function renderCrud(mod){
   const r=await api('listRows',mod);S.crud=Object.assign({mod:mod},r);const c=S.crud;
   const imp=IMPORTABLE_FE.indexOf(mod)>=0&&r.canWrite;
-  $('app-container').innerHTML=`${!r.canWrite&&S.user.Role!=='Admin'?'<div class="alert alert-secondary py-2 small mb-3"><i class="bi bi-eye"></i> <b>Mode lihat saja.</b> Menambah, mengubah, dan menghapus data pada fitur ini memerlukan hak akses dari Admin (menu Pengguna &amp; Hak Akses).</div>':''}${CRX[mod]?'<div id="crx" class="mb-3"></div>':''}<div class="card-x p-3"><div class="d-flex flex-wrap gap-2 mb-3"><input class="form-control w-auto flex-grow-1" id="q" placeholder="Cari…" aria-label="Cari" oninput="drawTbl()">
+  $('app-container').innerHTML=`${CRX[mod]?'<div id="crx" class="mb-3"></div>':''}<div class="card-x p-3"><div class="d-flex flex-wrap gap-2 mb-3"><input class="form-control w-auto flex-grow-1" id="q" placeholder="Cari…" aria-label="Cari" oninput="drawTbl()">
     ${r.canWrite?'<button class="btn btn-pri" onclick="openForm(-1)"><i class="bi bi-plus-lg"></i> '+(mod==='perizinan'&&S.user.Role==='Orang Tua'?'Ajukan Izin':'Tambah')+'</button>':''}
     ${imp?'<button class="btn btn-outline-primary" onclick="importUI()"><i class="bi bi-file-earmark-arrow-up"></i> Impor CSV</button>':''}
     ${TBX[mod]&&r.canWrite?TBX[mod](c):''}${TBX[mod]&&!r.canWrite&&TBX[mod].always?TBX[mod](c):''}
@@ -157,14 +154,12 @@ function openForm(i){
   const hasN=fields.some(f=>f.n==='NISN');
   const inp=f=>{
     let val=r[f.n];if((val==null||val==='')&&i<0&&f.t==='date'&&DEF[f.n])val=tglIni();
-    if((val==null||val==='')&&i<0&&f.n==='Kelas'&&f.t==='text'&&R==='Guru Kelas'&&S.user.Kelas)val=S.user.Kelas;
     const v=esc(val==null?'':val),id='f_'+f.n,req=ed.indexOf(f)<rq?'required':'',lb=`<label class="form-label small fw-semibold" for="${id}">${esc(f.l)}</label>`;
     if(f.t==='select')return lb+`<select class="form-select" id="${id}" name="${f.n}">${f.o.map(o=>`<option ${r[f.n]===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
     if(f.t==='textarea')return lb+`<textarea class="form-control" id="${id}" name="${f.n}" rows="${f.n==='Isi'?10:3}" ${req}>${v}</textarea>`;
     if(f.t==='file')return lb+`<input type="hidden" name="${f.n}" id="${id}" value="${v}"><input type="file" class="form-control" accept="image/*,.pdf" onchange="up(this,'${id}')"><div class="form-text" id="${id}_s">${v?'Berkas sudah terlampir.':'Maks 5 MB (JPG/PNG/PDF).'}</div>`;
     const pw=f.t==='password',ty=f.t==='money'?'number':f.t;
     let ex='';if(f.t==='money'||f.t==='number')ex=' min="0" step="any" inputmode="decimal"';
-    if(f.n==='Kelas'&&R==='Guru Kelas'&&['jadwal','piketsiswa','orgkelas'].indexOf(c.mod)>=0)return lb+`<input class="form-control" id="${id}" name="${f.n}" value="${esc(S.user.Kelas||'')}" readonly><div class="form-text">Wali kelas hanya mengisi kelasnya sendiri.</div>`;
     if(f.n==='NISN'&&ot)return lb+`<input class="form-control" id="${id}" name="${f.n}" value="${esc(S.user.NISN||'')}" readonly>`;
     if(f.n==='NISN')ex+=' list="dlNisn"';
     return lb+`<input class="form-control" id="${id}" name="${f.n}" type="${ty}" value="${pw?'':v}" ${pw&&i<0?'required':req} autocomplete="off"${ex}>`;
@@ -200,34 +195,12 @@ function doImport(inp){
   rd.readAsText(f);
 }
 
-// ── Muat data di latar belakang supaya perpindahan menu terasa instan ──
-const WARMFN={dashboard:['getDashboard',[]],absensi:['getAbsensi',['','','']],pengaturan:['getSettings',[]],visimisi:['getSettings',[]],perpusdash:['getPerpus',[]],neraca:['neracaKeuangan',[]],infaqlap:['ringkasInfaq',[]],daftarwajah:['listWajah',[]],arsip:['listArsip',[]]};
-const WARMX={tabungan:[['saldoTabungan',[]]],emoney:[['saldoEmoney',[]]]};
-const ckey=(fn,a)=>fn+'|'+JSON.stringify(a);
-function invalidate(fn,a){
-  const mod=(a&&a[0])||'',one={saveRow:[mod],deleteRow:[mod],importData:[mod],importSiswa:['siswa'],terimaPPDB:['ppdb','siswa'],hibahKeInventaris:['baranghibah','inventaris'],saveIzin:['users']}[fn];
-  if(!one){Object.keys(CACHE).forEach(k=>delete CACHE[k]);return}
-  Object.keys(CACHE).forEach(k=>{if(k.indexOf('listRows|')!==0||one.some(x=>k===ckey('listRows',[x])))delete CACHE[k]}); // modul lain tetap tersimpan
-}
-function warm(id){ // dipanggil saat kursor/jari menyentuh menu: ambil datanya lebih dulu
-  const w=WARMFN[id],jobs=[];
-  if(w)jobs.push(w);else if(!PAGE[id]&&!/^[gt]_/.test(id)){jobs.push(['listRows',[id]]);(WARMX[id]||[]).forEach(x=>jobs.push(x))}
-  jobs.forEach(j=>{const k=ckey(j[0],j[1]);if(CACHE[k]===undefined&&!INF[k]){INF[k]=1;net(j[0],...j[1]).then(r=>{CACHE[k]=JSON.stringify(r);pc()}).catch(()=>{}).finally(()=>{INF[k]=0})}});
-}
+// ── Pengambilan cepat: prefetch hanya halaman inti ──
 async function prefetchAll(){
-  if(S.pfRun||!S.token)return;S.pfRun=true;
-  try{
-    const ids=(S.menu||[]).map(x=>x.id),jobs=[];
-    ids.forEach(id=>{const w=WARMFN[id];if(w)jobs.push({k:ckey(w[0],w[1]),f:w[0],a:w[1]})});
-    const crud=ids.filter(id=>!PAGE[id]&&!/^[gt]_/.test(id));
-    crud.forEach(id=>(WARMX[id]||[]).forEach(x=>jobs.push({k:ckey(x[0],x[1]),f:x[0],a:x[1]})));
-    const mods=crud.filter(id=>CACHE[ckey('listRows',[id])]===undefined);
-    const batches=[];for(let i=0;i<mods.length;i+=6)batches.push(mods.slice(i,i+6));
-    const queue=jobs.filter(j=>CACHE[j.k]===undefined).map(j=>()=>net(j.f,...j.a).then(r=>{CACHE[j.k]=JSON.stringify(r)}).catch(()=>{}))
-      .concat(batches.map(b=>()=>net('listBatch',b).then(r=>{Object.keys(r||{}).forEach(k=>{if(r[k]&&!r[k].error)CACHE[ckey('listRows',[k])]=JSON.stringify(r[k])})}).catch(()=>{})));
-    const w=async()=>{while(queue.length&&S.token){if(document.hidden)await new Promise(r=>setTimeout(r,2000));await queue.shift()();pc()}};
-    await Promise.all([w(),w()]);
-  }finally{S.pfRun=false}
+  const core=['dashboard','absensi','kartu','pengaturan','daftarwajah','siswa','guru','jadwal'],m={dashboard:['getDashboard'],absensi:['getAbsensi','','',''],kartu:['listRows','siswa'],pengaturan:['getSettings'],daftarwajah:['listWajah']},jobs=[];
+  for(const x of S.menu||[]){if(core.indexOf(x.id)<0)continue;const c=m[x.id]||['listRows',x.id],a=c.slice(1),key=c[0]+'|'+JSON.stringify(a);if(CACHE[key]===undefined&&!INF[key])jobs.push([c[0],a,key])}
+  const w=async()=>{while(jobs.length&&S.token){const j=jobs.shift();INF[j[2]]=1;try{CACHE[j[2]]=JSON.stringify(await net(j[0],...j[1]));pc()}catch(e){}INF[j[2]]=0}};
+  await Promise.all([w(),w(),w()]);
 }
 
 // ============================================================
@@ -363,8 +336,6 @@ async function bulkUI(mod){
   };
 }
 
-TBX.jurnal=()=>'<button class="btn btn-outline-success" onclick="jurnalBulanUI()"><i class="bi bi-file-earmark-text"></i> Laporan Bulanan (Kop & TTD)</button>';
-TBX.jurnal.always=true;
 // ── Nilai: cetak rapor / leger ──
 TBX.nilai=()=>'<button class="btn btn-outline-success" onclick="raporUI()"><i class="bi bi-printer"></i> Cetak Rapor</button>';
 TBX.nilai.always=true;
@@ -397,82 +368,4 @@ function soalCetak(){
   const so=q.map((r,i)=>`<div style="margin-bottom:10px"><b>${i+1}.</b> ${esc(r.Soal)}${r.Tipe==='Pilihan Ganda'?'<div style="margin-left:18px">'+['A','B','C','D'].filter(k=>r[k]).map(k=>k+'. '+esc(r[k])).join('<br>')+'</div>':r.Tipe==='Benar/Salah'?'<div style="margin-left:18px">( ) Benar &nbsp; ( ) Salah</div>':'<div style="margin-top:22px;border-bottom:1px dotted #000"></div>'}</div>`).join('');
   cetak(`<div style="font-family:Arial;font-size:13px">${kop()}<h3 style="text-align:center;margin:0 0 6px">LEMBAR SOAL — ${esc(m)}</h3><table style="width:100%;margin-bottom:10px"><tr><td>Nama: ..............................</td><td>Kelas: ........</td><td>Tanggal: ............</td></tr></table>${so}</div>`+
    (kunci?`<div style="page-break-before:always;font-family:Arial;font-size:13px"><h3>Kunci Jawaban — ${esc(m)}</h3>${q.map((r,i)=>`<div>${i+1}. ${esc(r.Kunci||'-')}${r.Pembahasan?' — <i>'+esc(r.Pembahasan)+'</i>':''}</div>`).join('')}</div>`:''));
-}
-
-
-// ============================================================
-// v4.1 — Hak akses ON/OFF, kondisi barang, barang hibah & berita acara
-// ============================================================
-// ── Pengguna: tombol Hak Akses ──
-ROWX.users=r=>{
-  if(r.Role==='Admin')return '<span class="pill bg-body-secondary me-1" title="Admin selalu memiliki seluruh hak akses">Semua hak</span> ';
-  const n=String(r.Izin||'').split(',').filter(Boolean).length;
-  return `<button class="btn btn-sm btn-outline-primary" onclick="izinUI('${esc(r.Username)}')" title="Atur hak akses ON/OFF per fitur"><i class="bi bi-toggles"></i> Hak Akses <span class="badge text-bg-primary">${n}</span></button> `;
-};
-async function izinUI(username){
-  let d;try{d=await net('getIzin',username)}catch(e){return fail(e)}
-  const set=new Set(d.izin),tot=d.katalog.reduce((a,g)=>a+g.items.length,0);
-  const body=()=>`<div class="alert alert-info small py-2"><b>ON</b> = pengguna boleh menambah, mengubah, dan menghapus data pada fitur itu. <b>OFF</b> = hanya dapat melihat. Fitur Game Edukatif dan Alat Pembelajaran bebas untuk semua pengguna. Guru Kelas tetap dibatasi pada data kelasnya sendiri.${d.role==='Orang Tua'||d.role==='Murid'?'<br><b>Orang Tua/Murid</b> hanya dapat memakai fitur yang memang disediakan untuk mereka (mis. Perizinan), dan hanya untuk data anaknya.':''}</div>
-   <div class="d-flex flex-wrap gap-2 align-items-center mb-2"><input id="izQ" class="form-control form-control-sm w-auto flex-grow-1" placeholder="Cari fitur…" aria-label="Cari fitur"><button class="btn btn-sm btn-outline-secondary" id="izT">Terapkan templat peran ${esc(d.role)}</button><button class="btn btn-sm btn-outline-success" id="izOn">Semua ON</button><button class="btn btn-sm btn-outline-danger" id="izOff">Semua OFF</button><span class="pill bg-body-secondary" id="izN"></span></div>
-   <div id="izB" style="max-height:55vh;overflow:auto">${d.katalog.map((g,gi)=>`<div class="mb-3 izg" data-g="${gi}"><div class="d-flex align-items-center border-bottom pb-1 mb-1"><b class="me-auto">${esc(g.g)}</b><label class="small form-check form-switch m-0"><input class="form-check-input izGrp" type="checkbox" data-g="${gi}"><span class="ms-1">Semua</span></label></div>
-     <div class="row g-1">${g.items.map(i=>`<div class="col-md-6 izi" data-t="${esc(i.label.toLowerCase())}"><label class="d-flex justify-content-between align-items-center border rounded px-2 py-1 form-check-label" for="iz_${i.id}"><span class="small">${esc(i.label)}</span><span class="form-check form-switch m-0"><input class="form-check-input izSw" type="checkbox" role="switch" id="iz_${i.id}" data-id="${i.id}" ${set.has(i.id)?'checked':''}></span></label></div>`).join('')}</div></div>`).join('')}</div>`;
-  openModal('Hak Akses — '+d.nama+' ('+d.role+')',body(),'<button class="btn btn-light" data-bs-dismiss="modal">Batal</button><button class="btn btn-pri" id="izSv"><i class="bi bi-save"></i> Simpan</button>','modal-xl');
-  const sync=()=>{document.querySelectorAll('.izSw').forEach(c=>c.checked=set.has(c.dataset.id));document.querySelectorAll('.izGrp').forEach(c=>{const its=d.katalog[+c.dataset.g].items;c.checked=its.every(i=>set.has(i.id))});$('izN').textContent='ON: '+set.size+' dari '+tot+' fitur'};
-  document.querySelectorAll('.izSw').forEach(c=>c.onchange=()=>{c.checked?set.add(c.dataset.id):set.delete(c.dataset.id);sync()});
-  document.querySelectorAll('.izGrp').forEach(c=>c.onchange=()=>{d.katalog[+c.dataset.g].items.forEach(i=>c.checked?set.add(i.id):set.delete(i.id));sync()});
-  $('izOn').onclick=()=>{d.katalog.forEach(g=>g.items.forEach(i=>set.add(i.id)));sync()};
-  $('izOff').onclick=()=>{set.clear();sync()};
-  $('izT').onclick=()=>{set.clear();d.templat.forEach(x=>set.add(x));sync();toast('Templat diterapkan','Hak akses disesuaikan dengan peran '+d.role+'. Tekan Simpan untuk menyimpan.','info')};
-  $('izQ').oninput=e=>{const q=e.target.value.toLowerCase();document.querySelectorAll('.izi').forEach(x=>x.style.display=!q||x.dataset.t.includes(q)?'':'none');document.querySelectorAll('.izg').forEach(g=>g.style.display=[...g.querySelectorAll('.izi')].some(x=>x.style.display!=='none')?'':'none')};
-  $('izSv').onclick=async()=>{$('izSv').disabled=true;try{const r=await api('saveIzin',username,[...set]);closeModal();toast('Tersimpan','Hak akses '+d.nama+': '+r.jumlah+' fitur ON.','success');renderCrud('users')}catch(e){fail(e);$('izSv').disabled=false}};
-  sync();
-}
-
-// ── Kondisi Barang: ringkasan ──
-CRX.kondisibarang=async(c,el)=>{
-  const last={};c.rows.slice().sort((a,b)=>String(a.Tanggal).localeCompare(String(b.Tanggal))).forEach(r=>last[String(r.Kode||r.Nama).toLowerCase()]=r);
-  const L=Object.values(last),sum=k=>L.reduce((a,r)=>a+(+r[k]||0),0),b=sum('JmlBaik'),rr=sum('JmlRR'),rb=sum('JmlRB'),t=(b+rr+rb)||1,pc=x=>Math.round(x*1000/t)/10;
-  let inv=[];try{inv=(await api('listRows','inventaris')).rows}catch(e){}
-  const kat={};inv.forEach(r=>{const k=r.Kategori||'Lainnya',x=kat[k]=kat[k]||{'Baik':0,'Rusak Ringan':0,'Rusak Berat':0};x[r.Kondisi]=(x[r.Kondisi]||0)+(+r.Jumlah||0)});
-  const kp=(l,v,s,cl)=>`<div class="col-6 col-lg-3"><div class="kpi kpi-sm" style="--c:${cl}"><div class="kpi-l">${l}</div><div class="kpi-v">${v}</div><div class="kpi-s">${s}</div></div></div>`;
-  const perlu=L.filter(r=>(+r.JmlRR||0)+(+r.JmlRB||0)>0);
-  el.innerHTML=`<div class="card-x p-3"><h2 class="h6">Ringkasan kondisi (pemeriksaan terbaru tiap barang)</h2><div class="row g-2 mb-3">${kp('Total Barang',b+rr+rb,L.length+' jenis barang','#7C3AED')}${kp('Kondisi Baik',b,pc(b)+'%','#10B981')}${kp('Rusak Ringan',rr,pc(rr)+'%','#F59E0B')}${kp('Rusak Berat',rb,pc(rb)+'%','#EF4444')}</div>
-   ${perlu.length?`<div class="small fw-semibold mb-1">Perlu tindak lanjut</div><div class="table-responsive mb-3"><table class="table table-sm"><thead><tr><th>Barang</th><th>Lokasi</th><th class="text-end">Rusak ringan</th><th class="text-end">Rusak berat</th><th>Tindak lanjut</th></tr></thead><tbody>${perlu.map(r=>`<tr><td>${esc(r.Nama)}</td><td>${esc(r.Lokasi)}</td><td class="text-end">${esc(r.JmlRR||0)}</td><td class="text-end">${esc(r.JmlRB||0)}</td><td>${esc(r.Tindak)}</td></tr>`).join('')}</tbody></table></div>`:''}
-   ${Object.keys(kat).length?`<div class="small fw-semibold mb-1">Rekap Inventaris Barang menurut kondisi</div><div class="table-responsive"><table class="table table-sm"><thead><tr><th>Kategori</th><th class="text-end">Baik</th><th class="text-end">Rusak ringan</th><th class="text-end">Rusak berat</th></tr></thead><tbody>${Object.keys(kat).sort().map(k=>`<tr><td>${esc(k)}</td><td class="text-end">${kat[k]['Baik']||0}</td><td class="text-end">${kat[k]['Rusak Ringan']||0}</td><td class="text-end">${kat[k]['Rusak Berat']||0}</td></tr>`).join('')}</tbody></table></div>`:''}</div>`;
-};
-
-// ── Barang Hibah & Berita Acara Serah Terima ──
-function terbilang(n){
-  n=Math.floor(+n||0);const s=['','satu','dua','tiga','empat','lima','enam','tujuh','delapan','sembilan','sepuluh','sebelas'];
-  const f=x=>{if(x<12)return s[x];if(x<20)return f(x-10)+' belas';if(x<100)return f(Math.floor(x/10))+' puluh'+(x%10?' '+f(x%10):'');if(x<200)return 'seratus'+(x%100?' '+f(x%100):'');if(x<1000)return f(Math.floor(x/100))+' ratus'+(x%100?' '+f(x%100):'');if(x<2000)return 'seribu'+(x%1000?' '+f(x%1000):'');if(x<1e6)return f(Math.floor(x/1000))+' ribu'+(x%1000?' '+f(x%1000):'');if(x<1e9)return f(Math.floor(x/1e6))+' juta'+(x%1e6?' '+f(x%1e6):'');if(x<1e12)return f(Math.floor(x/1e9))+' miliar'+(x%1e9?' '+f(x%1e9):'');return String(x)};
-  return n===0?'nol':f(n);
-}
-function parseHibah(t){
-  return String(t||'').split('\n').map(l=>l.split('|').map(x=>x.trim())).filter(a=>a[0]).map(a=>({nama:a[0],jml:Math.max(1,+a[1]||1),satuan:a[2]||'unit',kondisi:a[3]||'Baik',harga:+String(a[4]||'0').replace(/\D/g,'')||0}));
-}
-ROWX.baranghibah=(r,i,c)=>`<button class="btn btn-sm btn-light" title="Berita Acara Serah Terima" aria-label="Berita acara" onclick="bastUI(${i})"><i class="bi bi-file-earmark-text"></i></button> ${(c.canWrite&&r.Inventaris!=='Ya')?`<button class="btn btn-sm btn-light text-success" title="Masukkan ke Inventaris Barang" aria-label="Masukkan ke inventaris" onclick="hibahInv(${i})"><i class="bi bi-box-arrow-in-down"></i></button> `:''}`;
-async function hibahInv(i){
-  const r=S.crud.rows[i];if(!confirm('Masukkan '+parseHibah(r.Barang).length+' jenis barang dari '+r.NoBAST+' ke Inventaris Barang?'))return;
-  try{const x=await api('hibahKeInventaris',r.ID);toast('Berhasil',x.jumlah+' barang masuk Inventaris (Sumber Dana: Hibah).','success');renderCrud('baranghibah')}catch(e){fail(e)}
-}
-function bastHtml(r){
-  const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(r.Tanggal||''),d=m?new Date(+m[1],+m[2]-1,+m[3]):new Date(),HR=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'],e=esc;
-  const cap=x=>x.charAt(0).toUpperCase()+x.slice(1),it=parseHibah(r.Barang),tot=it.reduce((a,x)=>a+x.jml*x.harga,0),kep=(S.cfg&&S.cfg.kepsekNama)||'..................';
-  const pen=r.Penerima||kep,jab=r.JabatanPenerima||('Kepala '+sch()),P='font-size:13px;line-height:1.55;font-family:Arial,sans-serif';
-  const row=(a,b)=>`<tr><td style="width:130px;vertical-align:top">${a}</td><td style="width:10px;vertical-align:top">:</td><td>${b}</td></tr>`;
-  return `<div style="${P}">${kop()}<h3 style="text-align:center;margin:0">BERITA ACARA SERAH TERIMA BARANG HIBAH</h3><p style="text-align:center;margin:2px 0 14px">Nomor: ${e(r.NoBAST||'........')}</p>
-  <p style="text-align:justify">Pada hari ini <b>${HR[d.getDay()]}</b> tanggal <b>${cap(terbilang(d.getDate()))}</b> bulan <b>${BLN[d.getMonth()]}</b> tahun <b>${cap(terbilang(d.getFullYear()))}</b> (${fTgl(r.Tanggal)}), bertempat di ${e(sch())}, kami yang bertanda tangan di bawah ini:</p>
-  <table style="${P};width:100%;margin-bottom:6px"><tr><td style="width:24px;vertical-align:top">I.</td><td><table style="${P};width:100%">${row('Nama',e(r.Pemberi))}${row('Jabatan/Instansi',e(r.JabatanPemberi||'-'))}${row('Alamat',e(r.AlamatPemberi||'-'))}</table>selanjutnya disebut <b>PIHAK PERTAMA</b> (Pemberi Hibah).</td></tr>
-  <tr><td style="vertical-align:top;padding-top:8px">II.</td><td style="padding-top:8px"><table style="${P};width:100%">${row('Nama',e(pen))}${row('Jabatan',e(jab))}${row('Alamat',e((S.cfg&&S.cfg.alamat)||'-'))}</table>selanjutnya disebut <b>PIHAK KEDUA</b> (Penerima Hibah).</td></tr></table>
-  <p style="text-align:justify">PIHAK PERTAMA menyerahkan barang hibah kepada PIHAK KEDUA, dan PIHAK KEDUA menerima barang hibah tersebut dengan rincian sebagai berikut:</p>
-  <table border="1" cellpadding="5" style="border-collapse:collapse;width:100%;${P}"><thead><tr style="background:#eee"><th>No</th><th>Nama Barang</th><th>Jumlah</th><th>Satuan</th><th>Kondisi</th><th>Harga Satuan</th><th>Jumlah Harga</th></tr></thead><tbody>${it.map((x,i)=>`<tr><td align="center">${i+1}</td><td>${e(x.nama)}</td><td align="center">${x.jml}</td><td align="center">${e(x.satuan)}</td><td align="center">${e(x.kondisi)}</td><td align="right">${x.harga?rp(x.harga):'-'}</td><td align="right">${x.harga?rp(x.jml*x.harga):'-'}</td></tr>`).join('')}${tot?`<tr><td colspan="6" align="right"><b>Total Nilai</b></td><td align="right"><b>${rp(tot)}</b></td></tr>`:''}</tbody></table>
-  ${tot?`<p style="margin:4px 0"><i>Terbilang: ${cap(terbilang(tot))} rupiah</i></p>`:''}
-  <p style="text-align:justify">Barang hibah tersebut diserahkan untuk ${e(r.Peruntukan||'menunjang kegiatan pembelajaran dan operasional sekolah')}${r.Lokasi?' dan ditempatkan di '+e(r.Lokasi):''}. Sejak ditandatanganinya berita acara ini, barang hibah menjadi aset ${e(sch())} dan dicatat dalam inventaris barang sekolah, sedangkan pemeliharaan dan penggunaannya menjadi tanggung jawab PIHAK KEDUA.</p>
-  <p style="text-align:justify">Demikian Berita Acara Serah Terima ini dibuat dalam rangkap 2 (dua) untuk dipergunakan sebagaimana mestinya.</p>
-  <table style="${P};width:100%;margin-top:18px"><tr><td style="text-align:center;width:50%">PIHAK PERTAMA<br>Pemberi Hibah<br><br><br><br><u>${e(r.Pemberi)}</u></td><td style="text-align:center">PIHAK KEDUA<br>Penerima Hibah<br><br><br><br><u>${e(pen)}</u></td></tr></table>
-  ${(r.Saksi1||r.Saksi2)?`<table style="${P};width:100%;margin-top:14px"><tr><td colspan="2" style="text-align:center">Saksi-saksi:</td></tr><tr><td style="text-align:center;width:50%">1. <br><br><br><u>${e(r.Saksi1||'..................')}</u></td><td style="text-align:center">2. <br><br><br><u>${e(r.Saksi2||'..................')}</u></td></tr></table>`:''}</div>`;
-}
-function bastUI(i){
-  const r=S.crud.rows[i];S.bast=bastHtml(r);S.bastN=(r.NoBAST||'BAST').replace(/\W+/g,'_');
-  openModal('Berita Acara Serah Terima — '+(r.NoBAST||''),'<div style="max-height:62vh;overflow:auto;background:#fff;color:#000;padding:18px;border:1px solid var(--bd);border-radius:8px">'+S.bast+'</div>','<button class="btn btn-light" data-bs-dismiss="modal">Tutup</button><button class="btn btn-outline-secondary" onclick="dlDoc(S.bastN+\'.doc\',S.bast)"><i class="bi bi-file-earmark-word"></i> Unduh Word</button><button class="btn btn-pri" onclick="cetak(S.bast)"><i class="bi bi-printer"></i> Cetak / PDF</button>','modal-lg');
 }

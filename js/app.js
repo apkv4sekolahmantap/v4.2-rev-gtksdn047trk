@@ -1,4 +1,4 @@
-/** Apk Sekolah Mantap - Frontend v4.0 (GitHub Pages) -> REST API Google Apps Script. Modul tambahan: modules.js, pages.js, games.js, tools.js */
+/** Apk Sekolah Mantap - Frontend v4.1 (GitHub Pages) -> REST API Google Apps Script. Modul tambahan: modules.js, pages.js, games.js, tools.js */
 const VID=(function(){var v=new URLSearchParams(location.search).get('v')||'';return /^[\w\/\-]+$/.test(v)?v:''})();
 const ERRS=[];
 function logErr(m){ERRS.push(m);let el=document.getElementById('errLog');if(!el){document.body.insertAdjacentHTML('beforeend','<details id="errLog" style="position:fixed;left:8px;bottom:8px;z-index:5000;max-width:min(560px,95vw);background:#FEE2E2;color:#991B1B;border:1px solid #FCA5A5;border-radius:8px;padding:6px 10px;font:12px monospace"><summary></summary><div></div></details>');el=document.getElementById('errLog')}el.firstChild.textContent='Log kesalahan ('+ERRS.length+')';el.lastChild.innerHTML=ERRS.map(x=>String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;')).join('<br>')}
@@ -7,7 +7,7 @@ window.addEventListener('unhandledrejection',e=>logErr('promise: '+(e.reason&&e.
 /** Administrasi GTK SDN 047 Tarakan \u2014 Frontend SPA (tanpa ?page=, tanpa window.location) */
 const S={token:null,user:null,menu:[],cur:'',abs:{},absD:null,crud:null,editI:-1,charts:{},scan:null};
 const $=id=>document.getElementById(id);
-const waitLib=n=>new Promise(r=>{if(window[n])return r(true);let i=0;const t=setInterval(()=>{if(window[n]||++i>100){clearInterval(t);r(!!window[n])}},100)}); // langsung selesai bila pustaka sudah termuat
+const waitLib=n=>window[n]?Promise.resolve(true):new Promise(r=>{let i=0;const t=setInterval(()=>{if(window[n]||++i>100){clearInterval(t);r(!!window[n])}},100)});
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const IC={dashboard:'bi-grid-1x2-fill',absensi:'bi-calendar-check',scan:'bi-qr-code-scan',siswa:'bi-people',guru:'bi-person-badge',jurnal:'bi-journal-text',surat:'bi-envelope',buku:'bi-book',pinjam:'bi-arrow-left-right',hafalan:'bi-moon-stars',perkembangan:'bi-graph-up-arrow',users:'bi-shield-lock',kartu:'bi-person-vcard',pengaturan:'bi-gear',arsip:'bi-archive',laporan:'bi-bar-chart-line',wajah:'bi-person-bounding-box',daftarwajah:'bi-person-plus'};
 const ST={Hadir:['#ECFDF5','#065F46','#10B981'],Izin:['#FEF3C7','#92400E','#F59E0B'],Sakit:['#E0E7FF','#3730A3','#6366F1'],Alpa:['#FEE2E2','#991B1B','#EF4444']};
@@ -18,14 +18,14 @@ async function call(fn,...args){
   let res;try{res=await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:fn,args:args})})}
   catch(e){throw new Error('Tidak dapat terhubung ke server (periksa internet / GAS_URL).')}
   if(!res.ok)throw new Error('Server HTTP '+res.status);
-  const r=await res.json();if(!r.success)throw new Error(r.message||'Kesalahan server');return r.data;
+  const r=await res.json();if(r.nq>0&&window.drainSoon)drainSoon();if(window.perfNote)perfNote(fn,r);if(!r.success)throw new Error(r.message||'Kesalahan server');return r.data;
 }
-const CACHE={},INF={},RD={ringkasInfaq:1,listWajah:1,listRows:1,getDashboard:1,getAbsensi:1,listArsip:1,getSettings:1,getPerpus:1,neracaKeuangan:1,saldoEmoney:1,saldoTabungan:1},WR={simpanWajah:1,hapusWajah:1,mulaiTahunBaru:1,importData:1,saveRow:1,deleteRow:1,importSiswa:1,saveAbsensi:1,buatArsip:1,saveSettings:1,saveProfile:1,terimaPPDB:1,hapusData:1,saveIzin:1,hibahKeInventaris:1};
+const CACHE={},INF={},PEND={},RD={listWajah:1,listRows:1,getDashboard:1,getAbsensi:1,listArsip:1,getSettings:1,getPerpus:1,neracaKeuangan:1,saldoEmoney:1,saldoTabungan:1,laporanInfaq:1,laporanBOS:1},WR={nilaiSimpan:1,sinkronOrtu:1,setGeminiKey:1,setHakAkses:1,hibahKeInventaris:1,kenaikanBackup:1,kenaikanTerapkan:1,kenaikanUndo:1,simpanWajah:1,hapusWajah:1,mulaiTahunBaru:1,importData:1,saveRow:1,deleteRow:1,importSiswa:1,saveAbsensi:1,buatArsip:1,saveSettings:1,saveProfile:1,terimaPPDB:1,hapusData:1};
 async function net(fn,...a){
   if(TAFN[fn])a=a.concat([S.ta||'']);try{return await call(fn,S.token,...a)}
   catch(e){if(e.message==='SESI_HABIS'){toast('Sesi berakhir','Silakan login kembali.','warning');showLogin()}throw e}
 }
-function dirty(){return !!document.querySelector('.modal.show,.offcanvas.show')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'')||['scan','kartu','rpp','kuis','backup','visimisi','kartuguru'].indexOf(S.cur)>=0||(S.cur==='absensi'&&!!S.absDirty)}
+function dirty(){return !!document.querySelector('.modal.show,.offcanvas.show')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'')||['absensi','scan','kartu','rpp','kuis','backup','visimisi','kartuguru','kenaikan','laporan'].indexOf(S.cur)>=0}
 function bg(fn,a,key){
   if(INF[key])return;INF[key]=1;
   net(fn,...a).then(r=>{const j=JSON.stringify(r),ch=CACHE[key]!==j;CACHE[key]=j;pc();if(ch&&S.keys&&S.keys[key]&&!dirty()){S.quiet=true;try{navigateTo(S.cur)}finally{S.quiet=false}}}).catch(()=>{}).finally(()=>{INF[key]=0});
@@ -33,15 +33,15 @@ function bg(fn,a,key){
 async function api(fn,...a){
   const key=RD[fn]?fn+'|'+JSON.stringify(a):null;
   if(key){S.keys=S.keys||{};S.keys[key]=1;if(CACHE[key]!==undefined){bg(fn,a,key);return JSON.parse(CACHE[key])}}
-  const r=await net(fn,...a);
+  let r;
+  if(key){PEND[key]=PEND[key]||net(fn,...a).finally(()=>{delete PEND[key]});r=await PEND[key]}else r=await net(fn,...a);
   if(key){CACHE[key]=JSON.stringify(r);pc()}
-  else if(WR[fn]){invalidate(fn,a);clearTimeout(S.pf);S.pf=setTimeout(prefetchAll,1200)}
+  else if(WR[fn]){Object.keys(CACHE).forEach(k=>delete CACHE[k]);clearTimeout(S.pf);S.pf=setTimeout(prefetchAll,2500)}
   return r;
 }
 function toast(t,m,k){if(!window.bootstrap){console.log(t+': '+m);return}$('toast').className='toast border-0 text-bg-'+(k||'primary');$('toastBody').innerHTML='<b>'+esc(t)+'</b><br>'+esc(m);bootstrap.Toast.getOrCreateInstance($('toast'),{delay:4500}).show()}
-const fail=e=>{toast('Gagal',e.message,'danger');logErr('fail: '+e.message);const c=$('app-container');if(c&&(c.classList.contains('busy')||c.querySelector('.spinner-border,.skel')))c.innerHTML='<div class="card-x p-4"><b class="text-danger">Gagal memuat data.</b><div class="small mt-1">'+esc(e.message)+'</div><button class="btn btn-pri mt-3" onclick="navigateTo(S.cur)">Coba lagi</button></div>'};
-const SKEL='<div class="skel" aria-hidden="true"><div class="skel-b" style="height:54px"></div><div class="row g-3 my-1"><div class="col-6 col-lg-3"><div class="skel-b" style="height:96px"></div></div><div class="col-6 col-lg-3"><div class="skel-b" style="height:96px"></div></div><div class="col-6 col-lg-3"><div class="skel-b" style="height:96px"></div></div><div class="col-6 col-lg-3"><div class="skel-b" style="height:96px"></div></div></div><div class="skel-b" style="height:260px"></div></div>';
-const loading=()=>{if(S.quiet)return;clearTimeout(S.lt);S.lt=setTimeout(()=>{document.body.classList.add('nav-busy');$('app-container').innerHTML=SKEL},180)}; // kerangka hanya muncul bila data belum siap >0,18 dtk; data tersimpan tampil seketika
+const fail=e=>{toast('Gagal',e.message,'danger');logErr('fail: '+e.message);const c=$('app-container');if(c&&(c.classList.contains('busy')||c.querySelector('.spinner-border')))c.innerHTML='<div class="card-x p-4"><b class="text-danger">Gagal memuat data.</b><div class="small mt-1">'+esc(e.message)+'</div><button class="btn btn-pri mt-3" onclick="navigateTo(S.cur)">Coba lagi</button></div>'};
+const loading=()=>{if(S.quiet)return;$('app-container').classList.add('busy');document.body.classList.add('nav-busy')};
 function openModal(t,b,f,size){$('mdlTitle').textContent=t;$('mdlBody').innerHTML=b;$('mdlFoot').innerHTML=f||'<button class="btn btn-light" data-bs-dismiss="modal">Tutup</button>';$('mdlDlg').className='modal-dialog modal-dialog-centered modal-dialog-scrollable '+(size||'');window.bootstrap?bootstrap.Modal.getOrCreateInstance($('mdl')).show():alert(t+'\n'+String(b).replace(/<[^>]+>/g,' ').slice(0,200))}
 const closeModal=()=>bootstrap.Modal.getOrCreateInstance($('mdl')).hide();
 
@@ -50,7 +50,7 @@ function setTheme(t){const h=document.documentElement;h.setAttribute('data-theme
   if(window.Chart){Chart.defaults.color=t==='dark'?'#9FB0CC':'#475569';Object.values(S.charts).forEach(c=>c.update())}}
 const toggleTheme=()=>setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
 function startApp(){
-  const b=$('boot');if(b)b.remove();const v=$('ver');if(v)v.textContent='Versi 4.2';
+  const b=$('boot');if(b)b.remove();const v=$('ver');if(v)v.textContent='Versi 4.1';
   let t='light';try{t=localStorage.getItem('theme')||'light'}catch(e){}
   try{setTheme(t)}catch(e){}
   VID?showPublic():restore();
@@ -90,16 +90,16 @@ const scanSesi=()=>{const l=SESI_ROLE[S.user.Role]||[];return l.indexOf(S.scanS)
 function sesiSelect(){const l=SESI_ROLE[S.user.Role]||[];return l.length>1?'<select class="form-select form-select-sm w-auto" aria-label="Sesi" onchange="S.scanS=this.value">'+l.map(x=>'<option value="'+x+'"'+(x===scanSesi()?' selected':'')+'>'+(x==='Kelas'?'Kelas (harian)':x+' (mandiri)')+'</option>').join('')+'</select>':'<span class="pill bg-body-secondary">'+(scanSesi()==='Kelas'?'Kelas (harian)':scanSesi()+' (mandiri)')+'</span>'}
 async function renderAbs(kelas,tgl,sesi){
   try{
-    const d=await api('getAbsensi',kelas||'',tgl||'',sesi||'');S.absD=d;S.absDirty=false;S.abs={};d.siswa.forEach(s=>S.abs[s.NISN]=s.Status);
+    const d=await api('getAbsensi',kelas||'',tgl||'',sesi||'');S.absD=d;S.abs={};d.siswa.forEach(s=>S.abs[s.NISN]=s.Status);
     $('app-container').innerHTML=`<div class="card-x p-3 mb-3"><div class="row g-2 align-items-end">
       <div class="col-6 col-md-3"><label class="form-label small fw-semibold" for="aK">Kelas</label><select class="form-select" id="aK" onchange="renderAbs(this.value,$('aT').value,S.absD.sesi)">${d.kelasList.map(k=>`<option ${k===d.kelas?'selected':''}>${esc(k)}</option>`).join('')}</select></div>
       <div class="col-6 col-md-3"><label class="form-label small fw-semibold" for="aT">Tanggal</label><input type="date" class="form-control" id="aT" value="${d.tgl}" onchange="renderAbs($('aK').value,this.value,S.absD.sesi)"></div>
-      <div class="col-12 col-md-6 d-flex gap-2 justify-content-md-end"><button class="btn btn-outline-secondary" onclick="lapBulanUI()"><i class="bi bi-file-earmark-text"></i> Laporan Bulanan</button>${d.canEdit?`<button class="btn btn-outline-success" onclick="allHadir()"><i class="bi bi-check2-all"></i> Semua Hadir</button><button class="btn btn-pri" id="bAbs" onclick="saveAbs()"><i class="bi bi-cloud-upload"></i> Simpan</button>`:''}</div></div><div id="rekap" class="mt-3"></div></div><div id="absList"></div>`;
+      <div class="col-12 col-md-6 d-flex gap-2 justify-content-md-end">${d.canEdit?`<button class="btn btn-outline-success" onclick="allHadir()"><i class="bi bi-check2-all"></i> Semua Hadir</button><button class="btn btn-pri" id="bAbs" onclick="saveAbs()"><i class="bi bi-cloud-upload"></i> Simpan</button>`:''}</div></div><div id="rekap" class="mt-3"></div></div><div id="absList"></div>`;
     drawAbs();
   }catch(e){fail(e)}
 }
-const setSt=(i,k)=>{S.absDirty=true;S.abs[S.absD.siswa[i].NISN]=k;drawAbs()};
-const allHadir=()=>{S.absDirty=true;S.absD.siswa.forEach(s=>{if(!S.abs[s.NISN])S.abs[s.NISN]='Hadir'});drawAbs()};
+const setSt=(i,k)=>{S.abs[S.absD.siswa[i].NISN]=k;drawAbs()};
+const allHadir=()=>{S.absD.siswa.forEach(s=>{if(!S.abs[s.NISN])S.abs[s.NISN]='Hadir'});drawAbs()};
 async function saveAbs(){
   const d=S.absD,b=$('bAbs');b.disabled=true;b.innerHTML='<span class="spinner-border spinner-border-sm"></span> Menyimpan\u2026';
   try{
@@ -234,6 +234,13 @@ async function renderSet(){
       <div class="col-12"><label class="form-label small fw-semibold" for="sAl">Alamat</label><input class="form-control" id="sAl" name="alamat" value="${esc(c.alamat||'')}"></div>
       <div class="col-12"><label class="form-label small fw-semibold" for="sFu">URL situs (GitHub Pages, dipakai pada QR sertifikat)</label><input class="form-control" id="sFu" name="frontendUrl" value="${esc(c.frontendUrl||'')}" placeholder="https://username.github.io/sdn047-tarakan/"></div>
       <div class="col-12"><label class="form-label small fw-semibold" for="sKs">Nama Kepala Sekolah (di kartu)</label><input class="form-control" id="sKs" name="kepsekNama" value="${esc(c.kepsekNama||'')}"></div>
+      <div class="col-6"><label class="form-label small fw-semibold" for="sNs">NSS</label><input class="form-control" id="sNs" name="nss" value="${esc(c.nss||'')}" inputmode="numeric"></div><div class="col-6"><label class="form-label small fw-semibold" for="sNp">NPSN</label><input class="form-control" id="sNp" name="npsn" value="${esc(c.npsn||'')}" inputmode="numeric"></div>
+      <div class="col-12"><label class="form-label small fw-semibold" for="sKn">NIP Kepala Sekolah (tanda tangan laporan)</label><input class="form-control" id="sKn" name="kepsekNip" value="${esc(c.kepsekNip||'')}"></div>
+      <div class="col-6"><label class="form-label small fw-semibold" for="sK1">Kop surat baris 1</label><input class="form-control" id="sK1" name="kopAtas1" value="${esc(c.kopAtas1===undefined?'PEMERINTAH KOTA TARAKAN':c.kopAtas1)}"></div><div class="col-6"><label class="form-label small fw-semibold" for="sK2">Kop surat baris 2</label><input class="form-control" id="sK2" name="kopAtas2" value="${esc(c.kopAtas2===undefined?'DINAS PENDIDIKAN':c.kopAtas2)}"></div>
+      <div class="col-12"><hr class="my-1"><div class="fw-semibold small mb-1"><i class="bi bi-whatsapp text-success"></i> Notifikasi WhatsApp ke orang tua (siswa tidak hadir)</div></div>
+      <div class="col-6"><label class="form-label small fw-semibold" for="sWa">Pengiriman otomatis</label><select class="form-select" id="sWa" name="waAktif"><option value="0" ${c.waAktif!=='1'?'selected':''}>Mati — tampilkan tautan WhatsApp manual</option><option value="1" ${c.waAktif==='1'?'selected':''}>Aktif — kirim lewat gateway (Fonnte)</option></select></div>
+      <div class="col-6"><label class="form-label small fw-semibold" for="sWt">Token Fonnte</label><input class="form-control" id="sWt" name="waToken" type="password" autocomplete="off" placeholder="${c.waTokenSet?'Tersimpan — kosongkan jika tidak diubah':'Tempel token dari fonnte.com'}"></div>
+      <div class="col-12 form-text mt-0">Tanpa token, setelah presensi disimpan muncul daftar tautan WhatsApp yang tinggal diketuk wali kelas. Nomor diambil dari kolom WhatsApp pada Data Siswa.</div>
       <div class="col-6"><label class="form-label small fw-semibold" for="sKk">KKTP bawaan (nilai batas ketercapaian)</label><input class="form-control" id="sKk" name="kktp" type="number" min="0" max="100" value="${esc(c.kktp||75)}"></div><div class="col-6"><label class="form-label small fw-semibold" for="sHs">Hari sekolah per minggu</label><select class="form-select" id="sHs" name="hariSekolah"><option value="5" ${c.hariSekolah!=='6'?'selected':''}>5 hari (Senin-Jumat)</option><option value="6" ${c.hariSekolah==='6'?'selected':''}>6 hari (Senin-Sabtu)</option></select></div>
       <div class="col-12"><button class="btn btn-pri" type="submit" id="bSet">Simpan Identitas</button></div></form></div></div>`:''}</div>`;
     applyBrand();
@@ -384,7 +391,7 @@ async function renderLap(){
       <div class="col-4 col-md-1"><button class="btn btn-pri w-100" onclick="lapCari()">Cari</button></div></div></div>
     <div class="row g-3 mb-1">${pstCards(d.pst,'catatan')}</div><div class="small text-secondary mb-3">${d.total} catatan · ${d.rekap.length} siswa · sesi ${esc(d.sesi)}</div>
     <div class="card-x p-3 mb-3"><div class="d-flex flex-wrap gap-2 mb-2"><h2 class="h6 m-0 me-auto align-self-center">Rekap per Siswa</h2>
-      <button class="btn btn-sm btn-pri" onclick="lapBulanUI()"><i class="bi bi-file-earmark-text"></i> Laporan Bulanan (Kop & TTD)</button><button class="btn btn-sm btn-outline-secondary" onclick="lapExport('xls')"><i class="bi bi-file-earmark-excel"></i> Excel</button><button class="btn btn-sm btn-outline-secondary" onclick="lapExport('docx')"><i class="bi bi-file-earmark-word"></i> Word</button><button class="btn btn-sm btn-outline-secondary" onclick="lapExport('pdf')"><i class="bi bi-file-earmark-pdf"></i> PDF</button></div>
+      <button class="btn btn-sm btn-outline-secondary" onclick="lapExport('xls')"><i class="bi bi-file-earmark-excel"></i> Excel</button><button class="btn btn-sm btn-outline-secondary" onclick="lapExport('docx')"><i class="bi bi-file-earmark-word"></i> Word</button><button class="btn btn-sm btn-outline-secondary" onclick="lapExport('pdf')"><i class="bi bi-file-earmark-pdf"></i> PDF</button></div>
       <div class="table-responsive"><table class="table"><thead><tr><th>NISN</th><th>Nama</th><th>Kelas</th><th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpa</th><th>% Hadir</th><th>% Sakit</th><th>% Izin</th><th>% Alpa</th></tr></thead><tbody>${d.rekap.map(r=>`<tr><td>${esc(r.NISN)}</td><td>${esc(r.Nama)}</td><td>${esc(r.Kelas)}</td><td>${r.Hadir}</td><td>${r.Izin}</td><td>${r.Sakit}</td><td>${r.Alpa}</td><td>${pc(r.Persen)}</td><td>${pp(r,'Sakit')}%</td><td>${pp(r,'Izin')}%</td><td>${pp(r,'Alpa')}%</td></tr>`).join('')||'<tr><td colspan="11" class="text-center text-secondary py-4">Tidak ada data pada filter ini.</td></tr>'}</tbody></table></div></div>
     <div class="card-x p-3"><h2 class="h6">Catatan Harian (300 terakhir)</h2><div class="table-responsive"><table class="table"><thead><tr><th>Tanggal</th><th>Nama</th><th>Kelas</th><th>Status</th><th>Jam</th><th>Metode</th></tr></thead><tbody>${d.rows.map(r=>`<tr><td>${esc(r.Tanggal)}</td><td>${esc(r.Nama)}</td><td>${esc(r.Kelas)}</td><td>${esc(r.Status)}</td><td>${esc(r.Jam)}</td><td>${esc(r.Metode)}</td></tr>`).join('')}</tbody></table></div></div>`;
   }catch(e){fail(e)}
@@ -408,17 +415,17 @@ function parseCsv(t){
   if(c!==''||r.length){r.push(c);R.push(r)}return R;
 }
 // ── Tahun Ajaran: pilihan di header, filter data, dan mulai tahun ajaran baru ──
-const TAFN={ringkasInfaq:1,listBatch:1,listRows:1,getDashboard:1,exportDokumen:1,neracaKeuangan:1};
+const TAFN={listRows:1,getDashboard:1,exportDokumen:1,neracaKeuangan:1,laporanInfaq:1};
 async function loadTA(){try{const r=await net('getTA');S.taList=r.list;S.taAktif=r.aktif;if(!S.ta)S.ta=r.aktif;drawTA()}catch(e){}}
 function drawTA(){const el=$('taSel');if(!el||!S.taList)return;el.innerHTML=S.taList.map(x=>'<option value="'+esc(x)+'"'+(x===S.ta?' selected':'')+'>TA '+esc(x)+(x===S.taAktif?' (aktif)':'')+'</option>').join('');el.classList.remove('d-none')}
-function gantiTA(v){S.ta=v;Object.keys(CACHE).forEach(k=>delete CACHE[k]);navigateTo(S.cur);setTimeout(prefetchAll,800)}
+function gantiTA(v){S.ta=v;Object.keys(CACHE).forEach(k=>delete CACHE[k]);navigateTo(S.cur)}
 function tahunBaruUI(){
   const y=+(S.taAktif||'').split('/')[0]||new Date().getFullYear(),lb=(i,t)=>'<label class="form-label small fw-semibold" for="'+i+'">'+t+'</label>';
-  openModal('Mulai Tahun Ajaran Baru','<div class="row g-3"><div class="col-12">'+lb('tbN','Tahun ajaran')+'<input id="tbN" class="form-control" value="'+(y+1)+'/'+(y+2)+'"></div><div class="col-6">'+lb('tbM','Mulai')+'<input type="date" id="tbM" class="form-control" value="'+(y+1)+'-07-01"></div><div class="col-6">'+lb('tbS','Selesai')+'<input type="date" id="tbS" class="form-control" value="'+(y+2)+'-06-30"></div><div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" id="tbK"> <span class="form-check-label">Naikkan kelas semua siswa (4-A menjadi 5-A, kelas 6 menjadi Lulus). Jalankan sekali per tahun ajaran, lalu perbarui kelas para Guru Kelas.</span></label></div></div><p class="small text-secondary mt-3 mb-0">Data tahun ajaran lama tetap tersimpan dan bisa dilihat lewat pilihan Tahun Ajaran di bagian atas.</p>','<button class="btn btn-light" data-bs-dismiss="modal">Batal</button><button class="btn btn-success" id="tbGo" onclick="doTahunBaru()">Mulai Tahun Ajaran Baru</button>');
+  openModal('Mulai Tahun Ajaran Baru','<div class="row g-3"><div class="col-12">'+lb('tbN','Tahun ajaran')+'<input id="tbN" class="form-control" value="'+(y+1)+'/'+(y+2)+'"></div><div class="col-6">'+lb('tbM','Mulai')+'<input type="date" id="tbM" class="form-control" value="'+(y+1)+'-07-01"></div><div class="col-6">'+lb('tbS','Selesai')+'<input type="date" id="tbS" class="form-control" value="'+(y+2)+'-06-30"></div><div class="col-12"><div class="alert alert-info small mb-0">Untuk menaikkan kelas siswa (termasuk backup otomatis dan Undo), gunakan menu <b>Kesiswaan &gt; Kenaikan Kelas</b>. Menu itu otomatis membuat tahun ajaran baru.</div></div></div><p class="small text-secondary mt-3 mb-0">Data tahun ajaran lama tetap tersimpan dan bisa dilihat lewat pilihan Tahun Ajaran di bagian atas.</p>','<button class="btn btn-light" data-bs-dismiss="modal">Batal</button><button class="btn btn-success" id="tbGo" onclick="doTahunBaru()">Mulai Tahun Ajaran Baru</button>');
 }
 async function doTahunBaru(){
   const b=$('tbGo');b.disabled=true;
-  try{const r=await api('mulaiTahunBaru',{nama:$('tbN').value.trim(),mulai:$('tbM').value,selesai:$('tbS').value,naikKelas:$('tbK').checked});closeModal();
+  try{const r=await api('mulaiTahunBaru',{nama:$('tbN').value.trim(),mulai:$('tbM').value,selesai:$('tbS').value,naikKelas:false});closeModal();
     toast('Berhasil','Tahun ajaran '+r.aktif+' aktif'+(r.naik||r.lulus?'. Naik kelas: '+r.naik+', lulus: '+r.lulus+'.':'.'),'success');S.ta=r.aktif;await loadTA();navigateTo(S.cur)}
   catch(e){fail(e);b.disabled=false}
 }
@@ -426,7 +433,7 @@ async function doTahunBaru(){
 // ══ Kecepatan: cache bertahan antar muat ulang, prefetch paralel, loading tanpa layar kosong, keep-alive ══
 const pc=()=>{clearTimeout(S.pt);S.pt=setTimeout(()=>{try{sessionStorage.setItem('cache_'+S.user.Username,JSON.stringify(CACHE))}catch(e){}},800)};
 function restoreCache(){try{const c=JSON.parse(sessionStorage.getItem('cache_'+S.user.Username)||'null');if(c)Object.assign(CACHE,c)}catch(e){}}
-(function(){const c=$('app-container');if(c)new MutationObserver(()=>{clearTimeout(S.lt);c.classList.remove('busy');document.body.classList.remove('nav-busy')}).observe(c,{childList:true})})();
+(function(){const c=$('app-container');if(c)new MutationObserver(()=>{c.classList.remove('busy');document.body.classList.remove('nav-busy')}).observe(c,{childList:true})})();
 setInterval(()=>{if(S.token&&typeof GAS_URL==='string')fetch(GAS_URL+'?ping=1',{cache:'no-store'}).catch(()=>{})},240000);
 function buildBnav(){
   const el=$('bnav');if(!el)return;const lbl={dashboard:'Beranda',wajah:'Wajah',scan:'Scan QR',absensi:'Absensi'};

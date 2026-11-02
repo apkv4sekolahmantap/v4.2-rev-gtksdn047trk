@@ -9,14 +9,14 @@ async function renderVisi(){
   const lines=t=>String(t||'').split('\n').map(x=>x.trim().replace(/^\d+[.)]\s*/,'')).filter(Boolean);
   const ol=t=>{const l=lines(t);return l.length?'<ol class="mb-0 ps-3">'+l.map(x=>'<li class="mb-1">'+esc(x)+'</li>').join('')+'</ol>':'<span class="text-secondary">Belum diisi.</span>'};
   const lg=thumb(c.logoUrl),box=(ic,t,b)=>`<div class="card-x p-4 mb-3"><h2 class="h5 mb-3"><i class="bi ${ic} text-primary"></i> ${t}</h2>${b}</div>`;
-  $('app-container').innerHTML=`<div class="card-x p-4 mb-3 text-center"><div class="logo-img brand-ic mx-auto mb-2" style="width:72px;height:72px">${lg?'<img alt="Logo" src="'+lg+'">':''}</div><h2 class="h4 fw-extra mb-1">${esc(c.schoolName||'Nama Sekolah')}</h2><div class="d-flex justify-content-center gap-2 flex-wrap my-2"><span class="pill" style="background:#EDE9FE;color:#5B21B6">NPSN: ${esc(c.npsn||'-')}</span><span class="pill" style="background:#D1FAE5;color:#065F46">NSS: ${esc(c.nss||'-')}</span></div><div class="text-secondary small">${esc(c.alamat||'')}</div><div class="text-secondary small">${[c.telepon,c.email,c.website].filter(Boolean).map(esc).join(' · ')}</div>${r.isAdmin?'<button class="btn btn-pri mt-3" onclick="visiEdit()"><i class="bi bi-pencil"></i> Ubah Visi, Misi & Profil</button>':''}</div>
+  $('app-container').innerHTML=`<div class="card-x p-4 mb-3 text-center"><div class="logo-img brand-ic mx-auto mb-2" style="width:72px;height:72px">${lg?'<img alt="Logo" src="'+lg+'">':''}</div><h2 class="h4 fw-extra mb-1">${esc(c.schoolName||'Nama Sekolah')}</h2><div class="text-secondary small">${[c.nss?'NSS '+esc(c.nss):'',c.npsn?'NPSN '+esc(c.npsn):''].filter(Boolean).join(' · ')}${c.nss||c.npsn?' · ':''}${esc(c.alamat||'')}</div><div class="text-secondary small">${[c.telepon,c.email,c.website].filter(Boolean).map(esc).join(' · ')}</div>${r.isAdmin?'<button class="btn btn-pri mt-3" onclick="visiEdit()"><i class="bi bi-pencil"></i> Ubah Visi, Misi & Profil</button>':''}</div>
    ${box('bi-eye','Visi',c.visi?'<p class="fs-5 mb-0" style="white-space:pre-line">“'+esc(c.visi)+'”</p>':'<span class="text-secondary">Belum diisi.</span>')}
    ${box('bi-bullseye','Misi',ol(c.misi))}${box('bi-flag','Tujuan Sekolah',ol(c.tujuan))}${c.sejarah?box('bi-clock-history','Sejarah Singkat','<p class="mb-0" style="white-space:pre-line">'+esc(c.sejarah)+'</p>'):''}`;
 }
 function visiEdit(){
   const c=S.cfg||{},ta=(k,l,r)=>`<div class="col-12"><label class="form-label small fw-semibold" for="v_${k}">${l}</label><textarea class="form-control" id="v_${k}" rows="${r}">${esc(c[k]||'')}</textarea></div>`,ip=(k,l)=>`<div class="col-md-6"><label class="form-label small fw-semibold" for="v_${k}">${l}</label><input class="form-control" id="v_${k}" value="${esc(c[k]||'')}"></div>`;
-  openModal('Ubah Visi, Misi & Profil',`<div class="row g-3">${ta('visi','Visi',3)}${ta('misi','Misi (satu butir per baris)',6)}${ta('tujuan','Tujuan Sekolah (satu butir per baris)',5)}${ta('sejarah','Sejarah singkat',4)}${ip('npsn','NPSN (Nomor Pokok Sekolah Nasional)')}${ip('nss','NSS (Nomor Statistik Sekolah)')}${ip('telepon','Telepon')}${ip('email','Email')}${ip('website','Website')}${ip('kepsekNama','Nama Kepala Sekolah')}${ip('kepsekNip','NIP Kepala Sekolah')}${ip('kota','Kota/tempat penandatanganan laporan')}</div>`,'<button class="btn btn-light" data-bs-dismiss="modal">Batal</button><button class="btn btn-pri" id="vSv">Simpan</button>','modal-lg');
-  $('vSv').onclick=async()=>{const o={};['visi','misi','tujuan','sejarah','npsn','nss','telepon','email','website','kepsekNama','kepsekNip','kota'].forEach(k=>o[k]=$('v_'+k).value.trim());
+  openModal('Ubah Visi, Misi & Profil',`<div class="row g-3">${ta('visi','Visi',3)}${ta('misi','Misi (satu butir per baris)',6)}${ta('tujuan','Tujuan Sekolah (satu butir per baris)',5)}${ta('sejarah','Sejarah singkat',4)}${ip('nss','NSS (Nomor Statistik Sekolah)')}${ip('npsn','NPSN (Nomor Pokok Sekolah Nasional)')}${ip('telepon','Telepon')}${ip('email','Email')}${ip('website','Website')}</div>`,'<button class="btn btn-light" data-bs-dismiss="modal">Batal</button><button class="btn btn-pri" id="vSv">Simpan</button>','modal-lg');
+  $('vSv').onclick=async()=>{const o={};['visi','misi','tujuan','sejarah','nss','npsn','telepon','email','website'].forEach(k=>o[k]=$('v_'+k).value.trim());
     try{$('vSv').disabled=true;await api('saveSettings',o);Object.assign(S.cfg,o);closeModal();toast('Berhasil','Visi & misi tersimpan.','success');renderVisi()}catch(e){fail(e);$('vSv').disabled=false}};
 }
 
@@ -141,7 +141,7 @@ async function renderNeraca(){
   const k=(l,v,s,c)=>`<div class="col-6 col-lg-3"><div class="kpi" style="--c:${c}"><div class="kpi-l">${l}</div><div class="kpi-v" style="font-size:1.35rem">${v}</div><div class="kpi-s">${s}</div></div></div>`;
   const tb=(j,l,hasil)=>`<div class="col-lg-4"><div class="card-x p-3 h-100"><h2 class="h6">${j}</h2>${l.map(x=>`<div class="d-flex justify-content-between small py-1 border-top"><span>${esc(x[0])}</span><b>${rp(x[1])}</b></div>`).join('')||'<div class="small text-secondary">Belum ada data.</div>'}${hasil||''}</div></div>`;
   const n=d.neraca,ln=(a,b,bold)=>`<tr class="${bold?'fw-bold':''}"><td>${a}</td><td class="text-end">${rp(b)}</td></tr>`;
-  $('app-container').innerHTML=`<div class="d-flex flex-wrap gap-2 mb-3 align-items-center"><span class="pill bg-body-secondary">Tahun ajaran ${esc(d.ta)}</span><span class="small text-secondary">Basis kas, dihitung dari data Pendapatan, Pembayaran Siswa, Pengeluaran, dan Honorarium (dibayar). <b>Infaq Siswa dan Dana BOS dibukukan terpisah</b> (menu masing-masing) dan tidak termasuk neraca ini.</span><div class="ms-auto d-flex gap-2"><button class="btn btn-sm btn-outline-secondary" onclick="nerXls()"><i class="bi bi-file-earmark-excel"></i> Excel</button><button class="btn btn-sm btn-outline-secondary" onclick="nerCetak()"><i class="bi bi-printer"></i> Cetak</button></div></div>
+  $('app-container').innerHTML=`<div class="d-flex flex-wrap gap-2 mb-3 align-items-center"><span class="pill bg-body-secondary">Tahun ajaran ${esc(d.ta)}</span><span class="small text-secondary">Basis kas, dihitung dari data Pendapatan, Pembayaran Siswa, Pengeluaran, dan Honorarium (dibayar).</span><div class="ms-auto d-flex gap-2"><button class="btn btn-sm btn-outline-secondary" onclick="nerXls()"><i class="bi bi-file-earmark-excel"></i> Excel</button><button class="btn btn-sm btn-outline-secondary" onclick="nerCetak()"><i class="bi bi-printer"></i> Cetak</button></div></div>
    <div class="row g-3 mb-3">${k('Total Pemasukan',rp(d.totMasuk),'tahun ajaran ini','#10B981')}${k('Total Pengeluaran',rp(d.totKeluar),'tahun ajaran ini','#EF4444')}${k('Surplus / Defisit',rp(d.surplus),d.surplus>=0?'surplus':'defisit','#7C3AED')}${k('Saldo Kas Operasional',rp(n.kas),'seluruh periode','#06B6D4')}</div>
    <div class="card-x p-3 mb-3"><h2 class="h6">Arus kas per bulan</h2><canvas id="nc" height="110"></canvas></div>
    <div class="row g-3 mb-3">${tb('Pendapatan sekolah',d.pend)}${tb('Pembayaran siswa',d.pemb)}${tb('Pengeluaran',d.peng,d.honor?`<div class="d-flex justify-content-between small py-1 border-top"><span>Honorarium GTK (dibayar)</span><b>${rp(d.honor)}</b></div>`:'')}</div>
@@ -185,116 +185,4 @@ async function doHapus(){
   if(!confirm('Yakin menghapus: '+nm+'?\nBackup otomatis akan dibuat lebih dulu.'))return;
   const b=$('hdB');b.disabled=true;b.innerHTML='<span class="spinner-border spinner-border-sm"></span> Memproses…';
   try{const r=await api('hapusData',m,$('hdK').value);Object.keys(CACHE).forEach(k=>delete CACHE[k]);S.sisAll=null;toast('Selesai',r.dihapus+' baris dihapus. Backup: '+r.backup,'success');renderBackup()}catch(e){fail(e);b.disabled=false;b.textContent='Hapus Data'}
-}
-
-
-// ── Laporan Infaq Siswa (terpisah dari neraca) ──
-async function renderInfaqLap(){
-  const d=await api('ringkasInfaq');await waitLib('Chart');Object.values(S.charts).forEach(c=>c.destroy());S.charts={};S.inf=d;
-  const k=(l,v,s,c)=>`<div class="col-6 col-lg-3"><div class="kpi" style="--c:${c}"><div class="kpi-l">${l}</div><div class="kpi-v" style="font-size:1.35rem">${v}</div><div class="kpi-s">${s}</div></div></div>`;
-  const tb=(j,l)=>`<div class="col-lg-4"><div class="card-x p-3 h-100"><h2 class="h6">${j}</h2>${l.map(x=>`<div class="d-flex justify-content-between small py-1 border-top"><span>${esc(x[0])}</span><b>${rp(x[1])}</b></div>`).join('')||'<div class="small text-secondary">Belum ada data.</div>'}</div></div>`;
-  $('app-container').innerHTML=`<div class="d-flex flex-wrap gap-2 mb-3 align-items-center"><span class="pill bg-body-secondary">Tahun ajaran ${esc(d.ta)}</span><span class="small text-secondary">Infaq dibukukan terpisah dan <b>tidak termasuk neraca keuangan</b>.${d.terbatasKelas?' Menampilkan pemasukan kelas Anda saja.':''}</span><div class="ms-auto d-flex gap-2"><button class="btn btn-sm btn-outline-secondary" onclick="infXls()"><i class="bi bi-file-earmark-excel"></i> Excel</button><button class="btn btn-sm btn-outline-secondary" onclick="infCetak()"><i class="bi bi-printer"></i> Cetak</button></div></div>
-   <div id="infBox"><div class="row g-3 mb-3">${k('Pendapatan Infaq',rp(d.totMasuk),'tahun ajaran ini','#10B981')}${k('Pengeluaran Infaq',rp(d.totKeluar),'tahun ajaran ini','#EF4444')}${k('Saldo Tahun Ajaran',rp(d.saldoTA),d.saldoTA>=0?'surplus':'defisit','#7C3AED')}${k('Saldo Infaq Keseluruhan',rp(d.saldo),'seluruh periode','#06B6D4')}</div>
-   <div class="card-x p-3 mb-3"><h2 class="h6">Pendapatan & pengeluaran per bulan</h2><canvas id="ifc" height="110"></canvas></div>
-   <div class="row g-3">${tb('Pendapatan per kelas',d.perKelas)}${tb('Pendapatan per jenis infaq',d.perJenis)}${tb('Pengeluaran per peruntukan',d.perPeruntukan)}</div></div>`;
-  Chart.defaults.color=document.documentElement.getAttribute('data-theme')==='dark'?'#9FB0CC':'#475569';
-  S.charts.i=new Chart($('ifc'),{type:'bar',data:{labels:d.bulan.map(b=>BLN[+b.slice(5)-1].slice(0,3)+' '+b.slice(2,4)),datasets:[{label:'Pendapatan',data:d.masuk,backgroundColor:'#10B981',borderRadius:4},{label:'Pengeluaran',data:d.keluar,backgroundColor:'#EF4444',borderRadius:4}]},options:{scales:{y:{beginAtZero:true}}}});
-}
-const infCetak=()=>cetak(kop()+'<h3 style="text-align:center">LAPORAN INFAQ SISWA — TA '+esc(S.inf.ta)+'</h3>'+$('infBox').innerHTML.replace(/<canvas[^>]*><\/canvas>/g,''));
-function infXls(){const d=S.inf;xlsSave('Laporan_Infaq_'+d.ta.replace('/','-')+'.xlsx',[['Ringkasan',[['Tahun ajaran',d.ta],['Pendapatan infaq',d.totMasuk],['Pengeluaran infaq',d.totKeluar],['Saldo tahun ajaran',d.saldoTA],['Saldo keseluruhan',d.saldo]]],['Per Bulan',[['Bulan','Pendapatan','Pengeluaran']].concat(d.bulan.map((b,i)=>[b,d.masuk[i],d.keluar[i]]))],['Rincian',[['Jenis','Uraian','Jumlah']].concat(d.perKelas.map(x=>['Pendapatan per kelas',x[0],x[1]]),d.perJenis.map(x=>['Pendapatan per jenis',x[0],x[1]]),d.perPeruntukan.map(x=>['Pengeluaran per peruntukan',x[0],x[1]]))]])}
-
-// ── Rekap Dana BOS ──
-async function renderBosLap(tahun){
-  const d=await net('rekapBOS',tahun||S.bosY||'');S.bosY=d.tahun;S.bos=d;await waitLib('Chart');Object.values(S.charts).forEach(c=>c.destroy());S.charts={};
-  const k=(l,v,s,c)=>`<div class="col-6 col-lg-3"><div class="kpi" style="--c:${c}"><div class="kpi-l">${l}</div><div class="kpi-v" style="font-size:1.25rem">${v}</div><div class="kpi-s">${s}</div></div></div>`;
-  const src=[['Saldo Awal',d.dana.awal,d.ambil.awal,d.keluarSumber.awal],['Penyaluran Tahap 1',d.dana.t1,d.ambil.t1,d.keluarSumber.t1],['Penyaluran Tahap 2',d.dana.t2,d.ambil.t2,d.keluarSumber.t2]];
-  $('app-container').innerHTML=`<div class="d-flex flex-wrap gap-2 mb-3 align-items-center"><label class="small fw-semibold" for="bY">Tahun anggaran</label><select id="bY" class="form-select w-auto" onchange="renderBosLap(this.value)">${d.tahunList.map(y=>`<option ${y===d.tahun?'selected':''}>${y}</option>`).join('')}</select><div class="ms-auto d-flex gap-2"><button class="btn btn-sm btn-outline-secondary" onclick="bosXls()"><i class="bi bi-file-earmark-excel"></i> Excel</button><button class="btn btn-sm btn-outline-secondary" onclick="bosCetak()"><i class="bi bi-printer"></i> Cetak</button></div></div>
-   <div id="bosBox"><div class="row g-3 mb-3">${k('Total Dana BOS',rp(d.dana.total),'saldo awal + tahap 1 + tahap 2','#7C3AED')}${k('Sudah Diambil',rp(d.ambil.total),'pengambilan bertahap','#06B6D4')}${k('Belum Diambil (di rekening)',rp(d.belumDiambil),'dana − pengambilan','#F59E0B')}${k('Pengeluaran',rp(d.keluar.total),'realisasi '+d.persen+'% dari dana','#EF4444')}</div>
-   <div class="row g-3 mb-3">${k('Kas di Tangan',rp(d.kasTangan),'diambil − pengeluaran','#10B981')}${k('Sisa Anggaran',rp(d.sisaAnggaran),'dana − pengeluaran','#6366F1')}</div>
-   <div class="card-x p-3 mb-3"><h2 class="h6">Dana awal, penyaluran, pengambilan, dan pengeluaran</h2><div class="table-responsive"><table class="table table-sm"><thead><tr><th>Sumber dana</th><th class="text-end">Diterima</th><th class="text-end">Diambil</th><th class="text-end">Belum diambil</th><th class="text-end">Pengeluaran</th><th class="text-end">Sisa</th></tr></thead><tbody>${src.map(x=>`<tr><td>${x[0]}</td><td class="text-end">${rp(x[1])}</td><td class="text-end">${rp(x[2])}</td><td class="text-end">${rp(x[1]-x[2])}</td><td class="text-end">${rp(x[3])}</td><td class="text-end">${rp(x[1]-x[3])}</td></tr>`).join('')}<tr class="fw-bold"><td>Total</td><td class="text-end">${rp(d.dana.total)}</td><td class="text-end">${rp(d.ambil.total)}</td><td class="text-end">${rp(d.belumDiambil)}</td><td class="text-end">${rp(d.keluar.total)}</td><td class="text-end">${rp(d.sisaAnggaran)}</td></tr></tbody></table></div><div class="form-text">Kolom "Sisa" = dana diterima − pengeluaran dari sumber tersebut (sesuai isian "Sumber Dana" pada pengeluaran).</div></div>
-   <div class="row g-3 mb-3"><div class="col-lg-6"><div class="card-x p-3 h-100"><h2 class="h6">Pengambilan dana bertahap</h2>${d.ambilList.map(a=>`<div class="d-flex justify-content-between small py-1 border-top"><span>${fTgl(a.Tanggal)} · ${esc(a.Tahap)}${a.Ke?' · ke-'+esc(a.Ke):''}<br><span class="text-secondary">${esc(a.Penerima||'')} ${esc(a.NoBukti||'')}</span></span><b>${rp(a.Jumlah)}</b></div>`).join('')||'<div class="small text-secondary">Belum ada pengambilan.</div>'}</div></div>
-   <div class="col-lg-6"><div class="card-x p-3 h-100"><h2 class="h6">Pengeluaran per komponen</h2>${d.keluar.komponen.map(x=>`<div class="small py-1 border-top"><div class="d-flex justify-content-between"><span>${esc(x[0])}</span><b>${rp(x[1])}</b></div><div class="progress" style="height:5px"><div class="progress-bar" style="width:${d.keluar.total?Math.round(x[1]*100/d.keluar.total):0}%;background:var(--pri)"></div></div></div>`).join('')||'<div class="small text-secondary">Belum ada pengeluaran.</div>'}</div></div></div>
-   <div class="card-x p-3"><h2 class="h6">Pengeluaran per bulan (${esc(d.tahun)})</h2><canvas id="bc" height="100"></canvas></div></div>
-   <div class="small text-secondary mt-2">Dana BOS dibukukan terpisah dan tidak termasuk neraca keuangan sekolah. Catat dana pada menu <b>Dana BOS — Saldo Awal & Penyaluran</b>, penarikan pada <b>Pengambilan Bertahap</b>, dan belanja pada <b>Pengeluaran</b>.</div>`;
-  Chart.defaults.color=document.documentElement.getAttribute('data-theme')==='dark'?'#9FB0CC':'#475569';
-  S.charts.b=new Chart($('bc'),{type:'bar',data:{labels:BLN.map(b=>b.slice(0,3)),datasets:[{label:'Pengeluaran',data:d.keluar.bulanan,backgroundColor:'#EF4444',borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
-}
-const bosCetak=()=>cetak(kop()+'<h3 style="text-align:center">REKAP DANA BOS — TAHUN '+esc(S.bos.tahun)+'</h3>'+$('bosBox').innerHTML.replace(/<canvas[^>]*><\/canvas>/g,''));
-function bosXls(){const d=S.bos;xlsSave('Rekap_BOS_'+d.tahun+'.xlsx',[['Ringkasan',[['Tahun',d.tahun],['Saldo awal',d.dana.awal],['Penyaluran tahap 1',d.dana.t1],['Penyaluran tahap 2',d.dana.t2],['Total dana',d.dana.total],['Diambil',d.ambil.total],['Belum diambil',d.belumDiambil],['Pengeluaran',d.keluar.total],['Kas di tangan',d.kasTangan],['Sisa anggaran',d.sisaAnggaran],['Realisasi (%)',d.persen]]],['Pengambilan',[['Tanggal','Tahap','Ke-','Jumlah','Penerima','No. bukti']].concat(d.ambilList.map(a=>[a.Tanggal,a.Tahap,a.Ke,a.Jumlah,a.Penerima,a.NoBukti]))],['Per Komponen',[['Komponen','Jumlah']].concat(d.keluar.komponen)]])}
-
-// ============================================================
-// LAPORAN BULANAN: kop surat + tanda tangan wali kelas / guru + diketahui Kepala Sekolah
-// ============================================================
-const bulanLabel=b=>BLN[+String(b).slice(5,7)-1]+' '+String(b).slice(0,4);
-const tglPanjang=()=>{const x=new Date();return x.getDate()+' '+BLN[x.getMonth()]+' '+x.getFullYear()};
-function kopSurat(s){
-  const lg=thumb(s.logoUrl),l2=[s.alamat,s.telepon?'Telp. '+s.telepon:'',s.email?'Email: '+s.email:'',s.website].filter(Boolean).join(' | '),id=[s.npsn?'NPSN: '+s.npsn:'',s.nss?'NSS: '+s.nss:''].filter(Boolean).join('   ');
-  return `<table style="width:100%;border-collapse:collapse;border-bottom:3px double #000;margin-bottom:10px"><tr><td style="width:80px;text-align:center;padding:4px">${lg?'<img alt="" src="'+lg+'" style="height:66px">':''}</td><td style="text-align:center;padding:4px"><div style="font-size:15pt;font-weight:bold">${esc((s.nama||'').toUpperCase())}</div><div style="font-size:9pt">${esc(l2)}</div><div style="font-size:9pt">${esc(id)}</div></td><td style="width:80px"></td></tr></table>`;
-}
-function ttdBlok(s,jabatan,nama,nip){
-  const D='.................................',tk=(s.kota?esc(s.kota)+', ':'')+tglPanjang();
-  return `<table style="width:100%;margin-top:26px;font-size:10pt;page-break-inside:avoid"><tr><td style="width:50%;text-align:center;vertical-align:top">Mengetahui,<br>Kepala Sekolah<br><br><br><br><br><b><u>${esc((s.kepsek&&s.kepsek.nama)||D)}</u></b><br>NIP. ${esc((s.kepsek&&s.kepsek.nip)||'-')}</td><td style="text-align:center;vertical-align:top">${tk}<br>${esc(jabatan)}<br><br><br><br><br><b><u>${esc(nama||D)}</u></b><br>NIP. ${esc(nip||'-')}</td></tr></table>`;
-}
-function reportShow(judul,html,fname,land){
-  S.rep={html:html,fname:fname,land:land};
-  openModal(judul,'<div style="background:#fff;color:#000;padding:16px;border-radius:8px;overflow:auto;max-height:64vh;font-family:Arial,sans-serif;font-size:10pt">'+html+'</div>','<button class="btn btn-light" data-bs-dismiss="modal">Tutup</button><button class="btn btn-outline-primary" onclick="repWord()"><i class="bi bi-file-earmark-word"></i> Unduh Word</button><button class="btn btn-pri" onclick="repCetak()"><i class="bi bi-printer"></i> Cetak / Simpan PDF</button>','modal-xl');
-}
-function repWord(){
-  const r=S.rep;
-  dlBlob(r.fname+'.doc',new Blob(['\ufeff<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><style>@page Section1{size:'+(r.land?'841.9pt 595.3pt;mso-page-orientation:landscape':'595.3pt 841.9pt')+';margin:42pt}div.Section1{page:Section1}table{border-collapse:collapse}body{font-family:Arial,sans-serif;font-size:10pt}</style></head><body><div class="Section1">'+r.html+'</div></body></html>'],{type:'application/msword'}));
-}
-function repCetak(){const r=S.rep;cetak('<style>@page{size:A4 '+(r.land?'landscape':'portrait')+';margin:12mm}</style><div style="font-family:Arial,sans-serif;font-size:10pt;color:#000">'+r.html+'</div>')}
-const TB='border="1" cellpadding="3" style="border-collapse:collapse;width:100%;font-size:9pt"';
-
-// ── Laporan kehadiran bulanan ──
-async function lapBulanUI(){
-  let d0;try{d0=await api('getAbsensi','','','')}catch(e){return fail(e)}
-  const kl=d0.kelasList||[],cur=(S.absD&&S.absD.kelas)||d0.kelas||kl[0]||'',op=(a,v)=>a.map(x=>`<option ${x===v?'selected':''}>${esc(x)}</option>`).join('');
-  openModal('Laporan Bulanan Kehadiran',`<div class="row g-2"><div class="col-6"><label class="form-label small fw-semibold" for="lbB">Bulan</label><input type="month" id="lbB" class="form-control" value="${tglIni().slice(0,7)}"></div><div class="col-6"><label class="form-label small fw-semibold" for="lbK">Kelas</label><select id="lbK" class="form-select">${op(kl,cur)}</select></div><div class="col-12"><label class="form-label small fw-semibold" for="lbS">Sesi</label><select id="lbS" class="form-select">${(d0.sesiList||['Kelas']).map(x=>`<option value="${esc(x)}" ${x===(S.absD&&S.absD.sesi)?'selected':''}>${x==='Kelas'?'Absensi Kelas (harian, ditandatangani wali kelas)':'Absensi '+esc(x)+' (mandiri)'}</option>`).join('')}</select></div></div><div class="form-text mt-2">Laporan berisi kop surat sekolah, rekap harian tiap siswa, persentase hadir/sakit/izin/alpa, tanda tangan wali kelas dan Kepala Sekolah.</div>`,
-   '<button class="btn btn-light" data-bs-dismiss="modal">Batal</button><button class="btn btn-pri" id="lbGo" onclick="lapBulanGo()">Buat Laporan</button>');
-}
-async function lapBulanGo(){
-  const b=$('lbB').value,k=$('lbK').value,s=$('lbS').value;if(!b)return toast('Lengkapi','Pilih bulan.','warning');
-  $('lbGo').disabled=true;$('lbGo').innerHTML='<span class="spinner-border spinner-border-sm"></span> Menyusun…';
-  try{const d=await net('laporanBulanan',k,b,s);reportShow('Laporan Kehadiran '+d.kelas+' — '+bulanLabel(d.bulan),lapBulanHtml(d),'Laporan_Kehadiran_'+String(d.kelas).replace(/\W+/g,'_')+'_'+d.bulan,true)}catch(e){fail(e);$('lbGo').disabled=false;$('lbGo').textContent='Buat Laporan'}
-}
-function lapBulanHtml(d){
-  const s=d.sekolah,tg=d.tanggal,e=esc,wk=d.sesi==='Kelas',lk=d.siswa.filter(x=>x.JK==='L').length,pr=d.siswa.filter(x=>x.JK==='P').length;
-  const judul=wk?'LAPORAN KEHADIRAN SISWA BULANAN':'LAPORAN KEHADIRAN SISWA BULANAN — '+e(d.sesi);
-  const head='<tr style="background:#eee"><th rowspan="2">No</th><th rowspan="2">Nama Siswa</th><th rowspan="2">L/P</th><th colspan="'+(tg.length||1)+'">Tanggal</th><th colspan="4">Jumlah</th><th rowspan="2">% Hadir</th></tr><tr style="background:#eee">'+(tg.length?tg.map(t=>'<th>'+(+t.slice(8))+'</th>').join(''):'<th>-</th>')+'<th>H</th><th>S</th><th>I</th><th>A</th></tr>';
-  const rows=d.siswa.map(x=>'<tr><td align="center">'+x.No+'</td><td>'+e(x.Nama)+'</td><td align="center">'+e(x.JK)+'</td>'+(tg.length?x.d.map(v=>'<td align="center">'+v+'</td>').join(''):'<td></td>')+'<td align="center">'+x.H+'</td><td align="center">'+x.S+'</td><td align="center">'+x.I+'</td><td align="center">'+x.A+'</td><td align="center"><b>'+x.Persen+'%</b></td></tr>').join('')||'<tr><td colspan="9" align="center">Tidak ada siswa.</td></tr>';
-  const p=d.pst.p,gs=d.guruSesi;
-  const ttd=wk?ttdBlok(s,'Wali Kelas '+d.kelas,d.wali.nama,d.wali.nip):ttdBlok(s,'Guru '+d.sesi,gs&&gs.nama,gs&&gs.nip);
-  return kopSurat(s)+`<div style="text-align:center;font-weight:bold;font-size:12pt">${judul}</div><div style="text-align:center;font-size:10pt;margin-bottom:8px">Bulan ${e(bulanLabel(d.bulan))} · Tahun Ajaran ${e(d.ta)}</div>
-  <table style="font-size:10pt;margin-bottom:6px"><tr><td style="width:150px">Kelas</td><td>: ${e(d.kelas)}</td></tr><tr><td>Jumlah siswa</td><td>: ${d.siswa.length} (L: ${lk}, P: ${pr})</td></tr><tr><td>Hari tercatat</td><td>: ${d.hariEfektif} hari</td></tr></table>
-  ${tg.length?'':'<p style="color:#b91c1c">Belum ada catatan kehadiran pada bulan ini.</p>'}<table ${TB}>${head}${rows}</table>
-  <p style="font-size:9pt;margin:6px 0">Keterangan: H = Hadir, S = Sakit, I = Izin, A = Alpa (tanpa keterangan).</p>
-  <table ${TB.replace('width:100%','width:60%')}><tr style="background:#eee"><th>Persentase</th><th>Hadir</th><th>Sakit</th><th>Izin</th><th>Alpa</th></tr><tr><td>Persentase bulan ini</td><td align="center"><b>${p.Hadir}%</b></td><td align="center">${p.Sakit}%</td><td align="center">${p.Izin}%</td><td align="center">${p.Alpa}%</td></tr><tr><td>Jumlah catatan</td><td align="center">${d.pst.c.Hadir}</td><td align="center">${d.pst.c.Sakit}</td><td align="center">${d.pst.c.Izin}</td><td align="center">${d.pst.c.Alpa}</td></tr></table>${ttd}`;
-}
-
-// ── Laporan jurnal mengajar bulanan ──
-async function jurnalBulanUI(){
-  const adm=GURU_ROLES.indexOf(S.user.Role)<0;let gs=[];
-  if(adm){try{gs=(await net('laporanJurnal',tglIni().slice(0,7),'')).gurus}catch(e){}}
-  openModal('Laporan Bulanan Jurnal Mengajar',`<div class="row g-2"><div class="col-6"><label class="form-label small fw-semibold" for="jbB">Bulan</label><input type="month" id="jbB" class="form-control" value="${tglIni().slice(0,7)}" onchange="jurnalGuruRefresh()"></div>
-   <div class="col-6">${adm?`<label class="form-label small fw-semibold" for="jbG">Guru</label><select id="jbG" class="form-select">${gs.map(g=>`<option value="${esc(g.Username)}">${esc(g.Nama)}</option>`).join('')||'<option value="">(belum ada jurnal)</option>'}</select>`:`<label class="form-label small fw-semibold">Guru</label><input class="form-control" value="${esc(S.user.Nama)}" readonly>`}</div></div><div class="form-text mt-2">Laporan berisi kop surat, seluruh jurnal bulan terpilih, tanda tangan ${adm?'guru/wali kelas':'Anda'} dan Kepala Sekolah.</div>`,
-   '<button class="btn btn-light" data-bs-dismiss="modal">Batal</button><button class="btn btn-pri" id="jbGo" onclick="jurnalBulanGo()">Buat Laporan</button>');
-}
-const GURU_ROLES=['Guru Kelas','Guru PAI','Guru PJOK','Guru Mapel'];
-async function jurnalGuruRefresh(){
-  const g=$('jbG');if(!g)return;
-  try{const d=await net('laporanJurnal',$('jbB').value,'');g.innerHTML=d.gurus.map(x=>`<option value="${esc(x.Username)}">${esc(x.Nama)}</option>`).join('')||'<option value="">(belum ada jurnal)</option>'}catch(e){}
-}
-async function jurnalBulanGo(){
-  const b=$('jbB').value,g=$('jbG')?$('jbG').value:'';if(!b)return toast('Lengkapi','Pilih bulan.','warning');
-  $('jbGo').disabled=true;$('jbGo').innerHTML='<span class="spinner-border spinner-border-sm"></span> Menyusun…';
-  try{const d=await net('laporanJurnal',b,g);reportShow('Jurnal Mengajar — '+d.guru.Nama+' — '+bulanLabel(d.bulan),jurnalBulanHtml(d),'Jurnal_Mengajar_'+String(d.guru.Nama).replace(/\W+/g,'_')+'_'+d.bulan,true)}catch(e){fail(e);$('jbGo').disabled=false;$('jbGo').textContent='Buat Laporan'}
-}
-function jurnalBulanHtml(d){
-  const s=d.sekolah,e=esc,gr=d.guru,wk=d.wali,hari=new Set(d.rows.map(r=>r.Tanggal)).size;
-  const rows=d.rows.map((r,i)=>`<tr><td align="center">${i+1}</td><td>${e(r.Hari)}, ${fTgl(r.Tanggal)}</td><td align="center">${e(r.Kelas)}</td><td>${e(r.Mapel)}</td><td align="center">${e(r.JamKe)}</td><td>${e(r.TP)}</td><td>${e(r.Materi)}</td><td>${e(r.Penilaian)}</td><td>${e(r.Ket)}</td></tr>`).join('')||'<tr><td colspan="9" align="center">Belum ada jurnal pada bulan ini.</td></tr>';
-  const jab=wk?'Wali Kelas '+(wk.kelas||gr.Kelas||''):(gr.Role||'Guru');
-  return kopSurat(s)+`<div style="text-align:center;font-weight:bold;font-size:12pt">LAPORAN JURNAL MENGAJAR BULANAN</div><div style="text-align:center;font-size:10pt;margin-bottom:8px">Bulan ${e(bulanLabel(d.bulan))} · Tahun Ajaran ${e(d.ta)}</div>
-  <table style="font-size:10pt;margin-bottom:6px"><tr><td style="width:150px">Nama Guru</td><td>: ${e(gr.Nama)}</td></tr><tr><td>NIP</td><td>: ${e(gr.nip||'-')}</td></tr><tr><td>Jabatan</td><td>: ${e(jab)}</td></tr><tr><td>Jumlah pertemuan</td><td>: ${d.rows.length} jurnal pada ${hari} hari</td></tr></table>
-  <table ${TB}><tr style="background:#eee"><th>No</th><th>Hari / Tanggal</th><th>Kelas</th><th>Mata Pelajaran</th><th>Jam ke</th><th>Tujuan Pembelajaran</th><th>Materi</th><th>Penilaian</th><th>Ket.</th></tr>${rows}</table>${ttdBlok(s,jab,gr.Nama,gr.nip)}`;
 }

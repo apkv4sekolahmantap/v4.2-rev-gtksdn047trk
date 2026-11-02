@@ -2,7 +2,7 @@
 // KONFIGURASI - ISI SEBELUM PUSH KE GITHUB
 // Tempel URL Web App Apps Script (berakhiran /exec) di antara tanda kutip.
 // ============================================================
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyzYtGDKtRJAY51UWJFlYwBYNRF4npBz0YNWk3xCJ1tx8aoz355RAyW5BQuG79mIN3FVg/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxO6LoxhJUtN1_1L45SskNsQUzKYNFDR-6sYP23O7oZy4CjkCl5HWL_f7liruP0PkaA6w/exec';
 
 // Pustaka pihak ketiga dimuat di latar belakang (tidak menahan halaman).
 (function () {
